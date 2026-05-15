@@ -201,7 +201,7 @@ private:
 
     int getHorizontalKerningForChars(uint64_t firstChar, uint64_t secondChar) const;
     unsigned char* getGlyphBitmapBufferWithOutline(unsigned int glyphIndex, FT_BBox& bbox);
-    bool getGlyphBitmapWithOutline(unsigned int glyphIndex, FT_BBox& bbox, FT_Bitmap &bmp);
+    uint8_t* getGlyphBitmapWithOutline(unsigned int glyphIndex, FT_BBox& bbox, int &pitch);
 
     void setGlyphCollection(GlyphCollection glyphs, std::string_view customGlyphs);
 

@@ -127,52 +127,41 @@ std::vector<TMXTilesetInfo*> FastTMXTiledMap::tilesetsForLayer(TMXLayerInfo* lay
     auto& tilesets    = mapInfo->getTilesets();
     const int tsCount = static_cast<int>(tilesets.size());
 
-    if(tilesets.size() > 0)
+    // Collect every tileset whose GID range [firstGid, nextFirstGid) is referenced by this layer.
+    // Iterate descending so the result is already in the order batchIndexForGID expects.
+    std::vector<TMXTilesetInfo*> used;
+    for (int i = tsCount - 1; i >= 0; --i)
     {
-    //    return tilesets[0];
-    }
-
-    for (auto iter = tilesets.crbegin(), iterCrend = tilesets.crend(); iter != iterCrend; ++iter)
-    {
-        TMXTilesetInfo* tilesetInfo = *iter;
-        auto tilesetTex = _director->getTextureCache()->addImage(tilesetInfo->_sourceImage);
-        int tilesetTileCount = (tilesetTex->getContentSize().width / tilesetInfo->_tileSize.width) * (tilesetTex->getContentSize().height / tilesetInfo->_tileSize.height);
-        //printf("tilesetTileCount:%d\n", tilesetTileCount);
-        if (tilesetInfo)
+        TMXTilesetInfo* ts = tilesets[i];
+        if (!ts)
+            continue;
+        auto tilesetTex = _director->getTextureCache()->addImage(ts->_sourceImage);
+        int tilesetTileCount = (tilesetTex->getContentSize().width / ts->_tileSize.width) * (tilesetTex->getContentSize().height / ts->_tileSize.height);
+        const uint32_t lo = static_cast<uint32_t>(ts->_firstGid);
+        // Upper bound: next tileset's firstGid, or the maximum GID value if this is the last.
+        const uint32_t hi =
+            (i + 1 < tsCount && tilesets[i + 1]) ? static_cast<uint32_t>(tilesets[i + 1]->_firstGid) : UINT32_MAX;
+        for (int y = 0; y < static_cast<int>(size.height); ++y)
         {
             for (int x = 0; x < static_cast<int>(size.width); ++x)
             {
                 uint32_t gid = layerInfo->_tiles[x + static_cast<int>(size.width) * y] & kTMXFlippedMask;
-                if (gid >= lo && gid < hi)
+                if (gid >= lo && gid < hi && gid < ts->_firstGid + tilesetTileCount)
                 {
-                    uint32_t pos = static_cast<uint32_t>(x + size.width * y);
-                    uint32_t gid = layerInfo->_tiles[pos];
 
-                    // gid are stored in little endian.
-                    // if host is big endian, then swap
-                    // if( o == CFByteOrderBigEndian )
-                    //    gid = CFSwapInt32( gid );
-                    /* We support little endian.*/
-
-                    // FIXME: gid == 0 --> empty tile
-                    if (gid != 0)
-                    {
-                        // Optimization: quick return
-                        // if the layer is invalid (more than 1 tileset per layer) an AXASSERT will be thrown later
-                        if ((gid & kTMXFlippedMask) >= static_cast<uint32_t>(tilesetInfo->_firstGid) &&
-                            gid < tilesetInfo->_firstGid + tilesetTileCount)
-                        {
-                            return tilesetInfo;
-                        }
-                    }
+                    used.push_back(ts);
+                    goto next_tileset;
                 }
             }
         }
+    next_tileset:;
     }
 
-    // If all the tiles are 0, return empty tileset
-    //printf("axmol: Warning: TMX Layer '{%s}' has no tiles", layerInfo->_name.c_str());
-    return nullptr;
+    if (used.empty())
+        AXLOGW("axmol: Warning: TMX Layer '{}' has no tiles", layerInfo->_name);
+
+    // Result is in descending firstGid order (matches batchIndexForGID scan direction).
+    return used;
 }
 
 void FastTMXTiledMap::buildWithMapInfo(TMXMapInfo* mapInfo, bool allowInvisibleLayers)

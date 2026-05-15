@@ -73,9 +73,9 @@ typedef struct _DataRef
 
 static tlx::string_map<DataRef> s_cacheFontData;
 
-bool GetMonoPixel(const FT_Bitmap& bitmap, int x, int y)
+bool GetMonoPixel(uint8_t *buffer, int pitch, int x, int y)
 {
-    unsigned char byte = bitmap.buffer[y * bitmap.pitch + (x >> 3)];
+    unsigned char byte = buffer[y * pitch + (x >> 3)];
     unsigned char mask = 0x80 >> (x & 7);
     return (byte & mask) != 0;
 }
@@ -483,168 +483,10 @@ uint8_t* FontFreeType::getGlyphBitmap(char32_t charCode,
         }
     }
 
-    return getGlyphBitmapByIndex(glyphIndex, outWidth, outHeight, outRect, xAdvance, sharedBitmapData, isMono);
+    return getGlyphBitmapByIndex(glyphIndex, glyphSize, glyphMetrics, sharedBitmapData, isMono);
 }
 
-uint8_t* FontFreeType::getGlyphBitmapByIndex(unsigned int glyphIndex,
-                                             GlyphSize& glyphSize,
-                                             GlyphMetrics& glyphMetrics,
-                                             bool& sharedBitmapData,
-                                            bool isMono)
-{
-    uint8_t* ret = nullptr;
-
-    do
-    {
-        FT_Activate_Size(_ftSize);
-        if (FT_Load_Glyph(_ftFace, glyphIndex, FT_LOAD_RENDER | FT_LOAD_NO_AUTOHINT))
-            break;
-
-        auto glyph = _ftFace->glyph;
-        if (_distanceFieldEnabled && glyph->bitmap.buffer)
-        {
-            // Require freetype version > 2.11.0, because freetype 2.11.0 sdf has memory access bug, see:
-            // https://gitlab.freedesktop.org/freetype/freetype/-/issues/1077
-            FT_Render_Glyph(glyph, FT_Render_Mode::FT_RENDER_MODE_SDF);
-        }
-
-        glyphSize.width  = glyph->bitmap.width;
-        glyphSize.height = glyph->bitmap.rows;
-
-        auto& metrics = glyph->metrics;
-
-        glyphMetrics.bboxWidth    = static_cast<float>(metrics.width >> 6);
-        glyphMetrics.bboxHeight   = static_cast<float>(metrics.height >> 6);
-        glyphMetrics.horiBearingX = static_cast<float>(metrics.horiBearingX >> 6);
-        glyphMetrics.horiBearingY = static_cast<float>(metrics.horiBearingY >> 6);
-        glyphMetrics.xAdvance     = static_cast<int>(metrics.horiAdvance >> 6);
-
-        if(isMono)
-        {
-            for(int i = 0; i < outWidth * outHeight; i++)
-            {
-                if(ret[i] < 128)
-                {
-                    ret[i] = 0;
-                }else
-                {
-                    ret[i] = 255;
-                }
-            }
-        }
-        else
-        {
-            for(int i = 0; i < outWidth * outHeight; i++)
-            {
-                if(ret[i] < 80)
-                {
-                    ret[i] = 0;
-                }else
-                {
-                    ret[i] = 255;
-                }
-            }
-            //auto ret2 = new unsigned char[outWidth * outHeight];
-        }
-
-        if (_outlineSize > 0 && glyphSize.width > 0 && glyphSize.height > 0) [[unlikely]]
-        {
-            sharedBitmapData       = false;
-            const auto sizeInBytes = glyphSize.width * glyphSize.height;
-            auto copyBitmap        = new uint8_t[sizeInBytes];
-            memcpy(copyBitmap, glyph->bitmap.buffer, sizeInBytes);
-
-            FT_BBox bbox;
-            FT_Bitmap outlineBitmap;
-            auto hasOutline = getGlyphBitmapWithOutline(glyphIndex, bbox, outlineBitmap);
-            if (!hasOutline)
-            {
-                ret = nullptr;
-                break;
-            }
-
-            int glyphMinX = static_cast<int>(glyphMetrics.horiBearingX);
-            int glyphMaxX = static_cast<int>(glyphMetrics.horiBearingX + glyphSize.width);
-            int glyphMinY = static_cast<int>(glyphMetrics.horiBearingY - glyphSize.height);
-            int glyphMaxY = static_cast<int>(glyphMetrics.horiBearingY);
-
-            auto outlineMinX   = bbox.xMin >> 6;
-            auto outlineMaxX   = bbox.xMax >> 6;
-            auto outlineMinY   = bbox.yMin >> 6;
-            auto outlineMaxY   = bbox.yMax >> 6;
-            auto outlineWidth  = outlineMaxX - outlineMinX;
-            auto outlineHeight = outlineMaxY - outlineMinY;
-
-            auto blendImageMinX = MIN(outlineMinX, glyphMinX);
-            auto blendImageMaxY = MAX(outlineMaxY, glyphMaxY);
-            auto blendWidth     = MAX(outlineMaxX, glyphMaxX) - blendImageMinX;
-            auto blendHeight    = blendImageMaxY - MIN(outlineMinY, glyphMinY);
-
-            metrics.horiBearingX = (float)blendImageMinX;
-            // FreeType: horiBearingY = distance from baseline to top
-            metrics.horiBearingY = blendImageMaxY - _outlineSize;
-
-            uint8_t* blendImage = nullptr;
-            if (blendWidth > 0 && blendHeight > 0)
-            {
-                FT_Pos index, index2;
-                auto imageSize = blendWidth * blendHeight * 2;
-                blendImage     = new uint8_t[imageSize];
-                memset(blendImage, 0, imageSize);
-
-                auto px = outlineMinX - blendImageMinX;
-                auto py = blendImageMaxY - outlineMaxY;
-                for (int y = 0; y < outlineHeight; ++y)
-                {
-                    for (int x = 0; x < outlineWidth; ++x)
-                    {
-                        index                 = px + x + ((py + y) * blendWidth);
-                        //index2                = x + (y * outlineWidth);
-                        blendImage[2 * index] = GetMonoPixel(outlineBitmap, x, y) ? 255 : 0;
-                    }
-                }
-
-                px = glyphMinX - blendImageMinX;
-                py = blendImageMaxY - glyphMaxY;
-                for (int y = 0; y < glyphSize.height; ++y)
-                {
-                    for (int x = 0; x < glyphSize.width; ++x)
-                    {
-                        index                     = px + x + ((y + py) * blendWidth);
-                        index2                    = x + (y * glyphSize.width);
-                        blendImage[2 * index + 1] = copyBitmap[index2];
-                    }
-                }
-            }
-
-            glyphMetrics.bboxWidth  = static_cast<float>(blendWidth);
-            glyphMetrics.bboxHeight = static_cast<float>(blendHeight);
-            glyphSize.width         = static_cast<int>(blendWidth);
-            glyphSize.height        = static_cast<int>(blendHeight);
-
-            delete[] copyBitmap;
-            if(hasOutline)
-            {
-                delete[] outlineBitmap.buffer;
-            }
-            ret = blendImage;
-        }
-        else
-        {
-            ret              = glyph->bitmap.buffer;
-            sharedBitmapData = true;
-        }
-
-        return ret;
-    } while (0);
-
-    glyphMetrics.bboxWidth  = 0;
-    glyphMetrics.bboxHeight = 0;
-    glyphMetrics.xAdvance   = 0;
-
-    return nullptr;
-}
-
+unsigned char* FontFreeType::getGlyphBitmapBufferWithOutline(unsigned int glyphIndex, FT_BBox& bbox)
 {
     uint8_t* ret = nullptr;
     if (FT_Load_Glyph(_ftFace, glyphIndex, FT_LOAD_NO_BITMAP) == 0)
@@ -691,6 +533,227 @@ uint8_t* FontFreeType::getGlyphBitmapByIndex(unsigned int glyphIndex,
     }
 
     return ret;
+}
+
+uint8_t *FontFreeType::getGlyphBitmapWithOutline(unsigned int glyphIndex, FT_BBox& bbox, int &pitch)
+{
+    pitch = 0;
+    uint8_t* ret = nullptr;
+    if (FT_Load_Glyph(_ftFace, glyphIndex, FT_LOAD_NO_BITMAP) == 0)
+    {
+        if (_ftFace->glyph->format == FT_GLYPH_FORMAT_OUTLINE)
+        {
+            FT_Glyph glyph;
+            if (FT_Get_Glyph(_ftFace->glyph, &glyph) == 0)
+            {
+                FT_Glyph_StrokeBorder(&glyph, _ftStroker, 0, 1);
+                if (glyph->format == FT_GLYPH_FORMAT_OUTLINE)
+                {
+                    FT_Outline* outline = &reinterpret_cast<FT_OutlineGlyph>(glyph)->outline;
+                    FT_Glyph_Get_CBox(glyph, FT_GLYPH_BBOX_GRIDFIT, &bbox);
+                    int32_t width = static_cast<int32_t>((bbox.xMax - bbox.xMin) >> 6);
+                    int32_t rows  = static_cast<int32_t>((bbox.yMax - bbox.yMin) >> 6);
+
+                    FT_Bitmap bmp;
+                    bmp.buffer = new unsigned char[width * rows];
+                    memset(bmp.buffer, 0, width * rows);
+                    bmp.width      = (int)width;
+                    bmp.rows       = (int)rows;
+                    //bmp.pitch      = (int)width;
+                    bmp.pitch = (width + 7) / 8;   // 1bitなので8ピクセルで1バイト
+                    bmp.pixel_mode = FT_PIXEL_MODE_MONO;
+                    bmp.num_grays  = 2;
+                    //bitmap.num_grays = 2;
+
+                    pitch = bmp.pitch;
+
+                    FT_Raster_Params params;
+                    memset(&params, 0, sizeof(params));
+                    params.source = outline;
+                    params.target = &bmp;
+                    params.gray_spans = nullptr;
+                    params.flags  = 0;
+                    FT_Outline_Translate(outline, -bbox.xMin, -bbox.yMin);
+                    FT_Outline_Render(_FTlibrary, outline, &params);
+
+                    //printf("FontFreeType::getGlyphBitmapWithOutline() width:%d height:%d\n", width, rows);
+
+                    /*
+                    for(int x = 0; x < bmp.width; x++)
+                    {
+                        for(int y = 0; y < bmp.rows; y++)
+                        {
+                            printf(GetMonoPixel(bmp, x, y) ? "*" : ".");
+                        }
+                        printf("\n");
+                    }
+                    */
+                    ret = bmp.buffer;
+                }
+                FT_Done_Glyph(glyph);
+            }
+        }
+    }
+    return ret;
+}
+
+uint8_t* FontFreeType::getGlyphBitmapByIndex(unsigned int glyphIndex,
+                                             GlyphSize& glyphSize,
+                                             GlyphMetrics& glyphMetrics,
+                                             bool& sharedBitmapData,
+                                            bool isMono)
+{
+    uint8_t* ret = nullptr;
+
+    do
+    {
+        FT_Activate_Size(_ftSize);
+        if (FT_Load_Glyph(_ftFace, glyphIndex, FT_LOAD_RENDER | FT_LOAD_NO_AUTOHINT))
+            break;
+
+        auto glyph = _ftFace->glyph;
+        if (_distanceFieldEnabled && glyph->bitmap.buffer)
+        {
+            // Require freetype version > 2.11.0, because freetype 2.11.0 sdf has memory access bug, see:
+            // https://gitlab.freedesktop.org/freetype/freetype/-/issues/1077
+            FT_Render_Glyph(glyph, FT_Render_Mode::FT_RENDER_MODE_SDF);
+        }
+
+        glyphSize.width  = glyph->bitmap.width;
+        glyphSize.height = glyph->bitmap.rows;
+
+        auto& metrics = glyph->metrics;
+
+        glyphMetrics.bboxWidth    = static_cast<float>(metrics.width >> 6);
+        glyphMetrics.bboxHeight   = static_cast<float>(metrics.height >> 6);
+        glyphMetrics.horiBearingX = static_cast<float>(metrics.horiBearingX >> 6);
+        glyphMetrics.horiBearingY = static_cast<float>(metrics.horiBearingY >> 6);
+        glyphMetrics.xAdvance     = static_cast<int>(metrics.horiAdvance >> 6);
+
+        ret = glyph->bitmap.buffer;
+
+        if(isMono)
+        {
+            for(int i = 0; i < glyphSize.width * glyphSize.height; i++)
+            {
+                if(ret[i] < 128)
+                {
+                    ret[i] = 0;
+                }else
+                {
+                    ret[i] = 255;
+                }
+            }
+        }
+        else
+        {
+            for(int i = 0; i < glyphSize.width * glyphSize.height; i++)
+            {
+                if(ret[i] < 80)
+                {
+                    ret[i] = 0;
+                }else
+                {
+                    ret[i] = 255;
+                }
+            }
+            //auto ret2 = new unsigned char[outWidth * outHeight];
+        }
+
+        if (_outlineSize > 0 && glyphSize.width > 0 && glyphSize.height > 0) [[unlikely]]
+        {
+            sharedBitmapData       = false;
+            const auto sizeInBytes = glyphSize.width * glyphSize.height;
+            auto copyBitmap        = new uint8_t[sizeInBytes];
+            memcpy(copyBitmap, glyph->bitmap.buffer, sizeInBytes);
+
+            FT_BBox bbox;
+            int pitch;
+            auto outlineBitmap = getGlyphBitmapWithOutline(glyphIndex, bbox, pitch);
+            if (outlineBitmap == nullptr)
+            {
+                ret = nullptr;
+                delete[] copyBitmap;
+                break;
+            }
+
+            int glyphMinX = static_cast<int>(glyphMetrics.horiBearingX);
+            int glyphMaxX = static_cast<int>(glyphMetrics.horiBearingX + glyphSize.width);
+            int glyphMinY = static_cast<int>(glyphMetrics.horiBearingY - glyphSize.height);
+            int glyphMaxY = static_cast<int>(glyphMetrics.horiBearingY);
+
+            auto outlineMinX   = bbox.xMin >> 6;
+            auto outlineMaxX   = bbox.xMax >> 6;
+            auto outlineMinY   = bbox.yMin >> 6;
+            auto outlineMaxY   = bbox.yMax >> 6;
+            auto outlineWidth  = outlineMaxX - outlineMinX;
+            auto outlineHeight = outlineMaxY - outlineMinY;
+
+            auto blendImageMinX = MIN(outlineMinX, glyphMinX);
+            auto blendImageMaxY = MAX(outlineMaxY, glyphMaxY);
+            auto blendWidth     = MAX(outlineMaxX, glyphMaxX) - blendImageMinX;
+            auto blendHeight    = blendImageMaxY - MIN(outlineMinY, glyphMinY);
+
+            metrics.horiBearingX = (float)blendImageMinX;
+            // FreeType: horiBearingY = distance from baseline to top
+            metrics.horiBearingY = blendImageMaxY - _outlineSize;
+
+            uint8_t* blendImage = nullptr;
+            if (blendWidth > 0 && blendHeight > 0)
+            {
+                FT_Pos index, index2;
+                auto imageSize = blendWidth * blendHeight * 2;
+                blendImage     = new uint8_t[imageSize];
+                memset(blendImage, 0, imageSize);
+
+                auto px = outlineMinX - blendImageMinX;
+                auto py = blendImageMaxY - outlineMaxY;
+                for (int y = 0; y < outlineHeight; ++y)
+                {
+                    for (int x = 0; x < outlineWidth; ++x)
+                    {
+                        index                 = px + x + ((py + y) * blendWidth);
+                        index2                = x + (y * outlineWidth);
+                        blendImage[2 * index] = GetMonoPixel(outlineBitmap, pitch, x, y) ? 255 : 0;
+                    }
+                }
+
+                px = glyphMinX - blendImageMinX;
+                py = blendImageMaxY - glyphMaxY;
+                for (int y = 0; y < glyphSize.height; ++y)
+                {
+                    for (int x = 0; x < glyphSize.width; ++x)
+                    {
+                        index                     = px + x + ((y + py) * blendWidth);
+                        index2                    = x + (y * glyphSize.width);
+                        blendImage[2 * index + 1] = copyBitmap[index2];
+                    }
+                }
+            }
+
+            glyphMetrics.bboxWidth  = static_cast<float>(blendWidth);
+            glyphMetrics.bboxHeight = static_cast<float>(blendHeight);
+            glyphSize.width         = static_cast<int>(blendWidth);
+            glyphSize.height        = static_cast<int>(blendHeight);
+
+            delete[] copyBitmap;
+            delete[] outlineBitmap;
+            ret = blendImage;
+        }
+        else
+        {
+            ret              = glyph->bitmap.buffer;
+            sharedBitmapData = true;
+        }
+
+        return ret;
+    } while (0);
+
+    glyphMetrics.bboxWidth  = 0;
+    glyphMetrics.bboxHeight = 0;
+    glyphMetrics.xAdvance   = 0;
+
+    return nullptr;
 }
 
 void FontFreeType::renderCharAt(uint8_t* dest,
