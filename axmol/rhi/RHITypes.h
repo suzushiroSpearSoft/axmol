@@ -319,14 +319,14 @@ enum class DepthStencilFlags : unsigned int
 AX_ENABLE_BITMASK_OPS(DepthStencilFlags)
 AX_ENABLE_BITSHIFT_OPS(DepthStencilFlags)
 
-enum class CullMode : uint32_t
+enum class CullMode : uint8_t
 {
-    NONE  = 0x00000000,
-    BACK  = 0x00000001,
-    FRONT = 0x00000002
+    NONE  = 0x00,
+    BACK  = 0x01,
+    FRONT = 0x02
 };
 
-enum class Winding : uint32_t
+enum class Winding : uint8_t
 {
     CLOCK_WISE,
     COUNTER_CLOCK_WISE
@@ -727,36 +727,17 @@ struct RectI
     {
         return this->x == v.x && this->y == v.y && this->width == v.width && this->height == v.height;
     }
-    inline RectI& set(int x, int y, int w, int h)
+    inline RectI& set(int x1, int y1, int w1, int h1)
     {
-        this->x      = x;
-        this->y      = y;
-        this->width  = w;
-        this->height = h;
+        this->x      = x1;
+        this->y      = y1;
+        this->width  = w1;
+        this->height = h1;
         return *this;
     }
 };
 
 using Viewport    = RectI;
 using ScissorRect = RectI;
-
-template <typename T, unsigned int N>
-inline void SafeRelease(T (&resourceBlock)[N])
-{
-    for (unsigned int i = 0; i < N; i++)
-    {
-        SafeRelease(resourceBlock[i]);
-    }
-}
-
-template <typename T>
-inline void SafeRelease(T& resource)
-{
-    if (resource)
-    {
-        resource->Release();
-        resource = nullptr;
-    }
-}
 
 }  // namespace ax::rhi

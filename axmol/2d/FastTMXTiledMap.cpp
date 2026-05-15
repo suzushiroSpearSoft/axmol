@@ -86,6 +86,8 @@ bool FastTMXTiledMap::initWithXML(std::string_view tmxString, std::string_view r
     setContentSize(Vec2::ZERO);
 
     TMXMapInfo* mapInfo = TMXMapInfo::createWithXML(tmxString, resourcePath);
+    if (!mapInfo)
+        return false;
 
     AXASSERT(!mapInfo->getTilesets().empty(), "FastTMXTiledMap: Map not found. Please check the filename.");
     buildWithMapInfo(mapInfo, allowInvisibleLayers);
@@ -104,11 +106,13 @@ FastTMXTiledMap::~FastTMXTiledMap()
 // private
 FastTMXLayer* FastTMXTiledMap::parseLayer(TMXLayerInfo* layerInfo, TMXMapInfo* mapInfo)
 {
-    TMXTilesetInfo* tileset = tilesetForLayer(layerInfo, mapInfo);
-    if (tileset == nullptr)
+    auto tilesets = tilesetsForLayer(layerInfo, mapInfo);
+    if (tilesets.empty())
         return nullptr;
 
-    FastTMXLayer* layer = FastTMXLayer::create(tileset, layerInfo, mapInfo);
+    FastTMXLayer* layer = FastTMXLayer::create(tilesets, layerInfo, mapInfo);
+    if (!layer)
+        return nullptr;
 
     // tell the layerinfo to release the ownership of the tiles map.
     layerInfo->_ownTiles = false;
@@ -117,10 +121,11 @@ FastTMXLayer* FastTMXTiledMap::parseLayer(TMXLayerInfo* layerInfo, TMXMapInfo* m
     return layer;
 }
 
-TMXTilesetInfo* FastTMXTiledMap::tilesetForLayer(TMXLayerInfo* layerInfo, TMXMapInfo* mapInfo)
+std::vector<TMXTilesetInfo*> FastTMXTiledMap::tilesetsForLayer(TMXLayerInfo* layerInfo, TMXMapInfo* mapInfo)
 {
-    Vec2 size      = layerInfo->_layerSize;
-    auto& tilesets = mapInfo->getTilesets();
+    Vec2 size         = layerInfo->_layerSize;
+    auto& tilesets    = mapInfo->getTilesets();
+    const int tsCount = static_cast<int>(tilesets.size());
 
     if(tilesets.size() > 0)
     {
@@ -135,9 +140,10 @@ TMXTilesetInfo* FastTMXTiledMap::tilesetForLayer(TMXLayerInfo* layerInfo, TMXMap
         //printf("tilesetTileCount:%d\n", tilesetTileCount);
         if (tilesetInfo)
         {
-            for (int y = 0; y < size.height; y++)
+            for (int x = 0; x < static_cast<int>(size.width); ++x)
             {
-                for (int x = 0; x < size.width; x++)
+                uint32_t gid = layerInfo->_tiles[x + static_cast<int>(size.width) * y] & kTMXFlippedMask;
+                if (gid >= lo && gid < hi)
                 {
                     uint32_t pos = static_cast<uint32_t>(x + size.width * y);
                     uint32_t gid = layerInfo->_tiles[pos];

@@ -61,7 +61,7 @@ PhysicsTests::PhysicsTests()
 namespace
 {
 Color STATIC_COLOR(1.0f, 0.0f, 0.0f, 1.0f);
-const int DRAG_BODYS_BITS = 1 << 7;
+constexpr auto DRAG_BODYS_BITS = 1u << 7;
 }  // namespace
 
 void PhysicsDemo::toggleDebug()
@@ -78,6 +78,7 @@ PhysicsDemo::PhysicsDemo() : _spriteTexture(nullptr), _ball(nullptr), _debugDraw
 bool PhysicsDemo::init()
 {
     TestCase::init();
+    setFixedUpdateEnabled(false);
     return initWithPhysics();
 }
 
@@ -136,7 +137,7 @@ bool PhysicsDemo::onMouseDown(Event* event)
     return true;
 }
 
-Sprite* PhysicsDemo::addGrossiniAtPosition(Vec2 p, float scale /* = 1.0*/)
+Sprite* PhysicsDemo::addGrossiniAtPosition(Vec2 p, float scale /* = 1.0*/, bool allowDrag /* = true */)
 {
     AXLOGD("Add sprite x: {:.2} y: {:.2}", p.x, p.y);
 
@@ -151,7 +152,10 @@ Sprite* PhysicsDemo::addGrossiniAtPosition(Vec2 p, float scale /* = 1.0*/)
     auto sp = Sprite::createWithTexture(_spriteTexture, Rect(posx, posy, 85, 121));
 
     sp->setScale(scale);
-    sp->addComponent(Rigidbody2D::createBox(Size(48.0f, 108.0f)));
+    auto rigidbody = Rigidbody2D::createBox(Size(48.0f, 108.0f));
+    if (allowDrag)
+        rigidbody->setTag(DRAG_BODYS_BITS);
+    sp->addComponent(rigidbody);
     sp->setPosition(p);
     this->addChild(sp);
 
@@ -168,31 +172,39 @@ namespace
 const int LOGO_WIDTH_COLORED     = 146;
 const int LOGO_HEIGHT_COLORED    = 38;
 const float LOGO_IMAGE_COLORED[] = {
-    -37,  2.5,  -143, 2.5,  -143, 2.5,  -2,   2.5,  -139, 2.5,  -2,   2.5,  -140, 1.5,  -2,   2.5,  -2,   2.5,  -133,
-    3.2,  -3,   2.5,  -2,   2.5,  -132, 7.2,  -1,   1.5,  -2,   2.5,  -132, 3.2,  -3,   3.2,  -2,   2.5,  -8,   12.1,
-    -67,  11.1, -35,  2.2,  -5,   2.2,  -2,   1.5,  -8,   16.1, -48,  8.1,  -7,   15.1, -31,  2.2,  -7,   2.2,  -10,
-    17.1, -45,  11.1, -5,   17.1, -30,  2.2,  -7,   2.2,  -10,  18.1, -43,  13.1, -4,   18.1, -29,  2.2,  -7,   2.2,
-    -10,  19.1, -41,  15.1, -3,   19.1, -29,  2.2,  -5,   2.2,  -11,  20.1, -40,  16.1, -2,   20.1, -28,  3.2,  -3,
-    3.2,  -11,  20.1, -8,   6.1,  -8,   5.1,  -6,   5.1,  -1,   17.1, -2,   21.1, -13,  13.4, -2,   7.2,  -12,  7.1,
-    -6,   7.1,  -6,   10.1, -5,   7.1,  -4,   14.1, -3,   8.1,  -1,   8.1,  -5,   8.1,  -13,  13.4, -4,   3.2,  -14,
-    7.1,  -6,   7.1,  -5,   12.1, -4,   8.1,  -2,   15.1, -4,   7.1,  -1,   8.1,  -6,   7.1,  -13,  13.4, -21,  7.1,
-    -5,   8.1,  -4,   14.1, -4,   7.1,  -1,   8.1,  -1,   7.1,  -4,   7.1,  -1,   8.1,  -6,   7.1,  -13,  3.4,  -7,
-    3.4,  -21,  20.1, -3,   16.1, -3,   15.1, -3,   5.1,  -5,   7.1,  -1,   8.1,  -6,   7.1,  -13,  3.4,  -7,   3.4,
-    -21,  19.1, -4,   17.1, -3,   14.1, -12,  7.1,  -2,   8.1,  -7,   6.1,  -13,  3.4,  -7,   3.4,  -21,  18.1, -4,
-    8.1,  -2,   8.1,  -4,   12.1, -12,  8.1,  -2,   8.1,  -7,   6.1,  -13,  3.4,  -7,   3.4,  -21,  19.1, -3,   7.1,
-    -4,   8.1,  -3,   11.1, -12,  8.1,  -3,   8.1,  -7,   6.1,  -13,  3.4,  -7,   3.4,  -21,  20.1, -1,   8.1,  -5,
-    7.1,  -4,   10.1, -11,  8.1,  -4,   8.1,  -7,   6.1,  -13,  3.4,  -7,   3.4,  -21,  20.1, -1,   8.1,  -5,   7.1,
-    -4,   9.1,  -10,  9.1,  -5,   8.1,  -7,   6.1,  -13,  3.4,  -7,   3.4,  -21,  7.1,  -6,   15.1, -6,   7.1,  -5,
-    8.1,  -9,   9.1,  -6,   8.1,  -6,   7.1,  -8,   23.4, -16,  7.1,  -7,   14.1, -6,   7.1,  -4,   9.1,  -8,   9.1,
-    -7,   8.1,  -6,   7.1,  -8,   23.4, -16,  7.1,  -7,   15.1, -5,   7.1,  -4,   10.1, -6,   9.1,  -8,   8.1,  -6,
-    7.1,  -8,   23.4, -16,  7.1,  -6,   8.1,  -1,   7.1,  -4,   8.1,  -3,   12.1, -4,   8.1,  -10,  8.1,  -4,   9.1,
-    -8,   3.4,  -7,   3.4,  -7,   3.4,  -16,  21.1, -1,   8.1,  -3,   7.1,  -3,   13.1, -4,   16.1, -2,   20.1, -9,
-    3.4,  -7,   3.4,  -7,   3.4,  -16,  20.1, -2,   18.1, -3,   14.1, -2,   18.1, -1,   20.1, -9,   3.4,  -7,   3.4,
-    -7,   3.4,  -16,  20.1, -3,   16.1, -3,   16.1, -1,   18.1, -1,   19.1, -10,  3.4,  -7,   3.4,  -7,   3.4,  -16,
-    19.1, -5,   15.1, -2,   8.1,  -2,   7.1,  -1,   18.1, -1,   18.1, -11,  3.4,  -7,   3.4,  -7,   3.4,  -16,  18.1,
-    -7,   13.1, -3,   7.1,  -3,   26.1, -1,   17.1, -12,  3.4,  -7,   3.4,  -7,   3.4,  -17,  15.1, -10,  10.1, -6,
-    5.1,  -5,   6.1,  -2,   16.1, -3,   14.1, -14,  3.4,  -7,   3.4,  -7,   3.4,  -44,  6.1,  -73,  23.4, -115, 40.3,
-    -106, 40.3, -106, 40.3, -106};
+    -37.0f, 2.5f,  -143.0f, 2.5f,  -143.0f, 2.5f,  -2.0f,   2.5f,  -139.0f, 2.5f,  -2.0f,   2.5f,  -140.0f, 1.5f,
+    -2.0f,  2.5f,  -2.0f,   2.5f,  -133.0f, 3.2f,  -3.0f,   2.5f,  -2.0f,   2.5f,  -132.0f, 7.2f,  -1.0f,   1.5f,
+    -2.0f,  2.5f,  -132.0f, 3.2f,  -3.0f,   3.2f,  -2.0f,   2.5f,  -8.0f,   12.1f, -67.0f,  11.1f, -35.0f,  2.2f,
+    -5.0f,  2.2f,  -2.0f,   1.5f,  -8.0f,   16.1f, -48.0f,  8.1f,  -7.0f,   15.1f, -31.0f,  2.2f,  -7.0f,   2.2f,
+    -10.0f, 17.1f, -45.0f,  11.1f, -5.0f,   17.1f, -30.0f,  2.2f,  -7.0f,   2.2f,  -10.0f,  18.1f, -43.0f,  13.1f,
+    -4.0f,  18.1f, -29.0f,  2.2f,  -7.0f,   2.2f,  -10.0f,  19.1f, -41.0f,  15.1f, -3.0f,   19.1f, -29.0f,  2.2f,
+    -5.0f,  2.2f,  -11.0f,  20.1f, -40.0f,  16.1f, -2.0f,   20.1f, -28.0f,  3.2f,  -3.0f,   3.2f,  -11.0f,  20.1f,
+    -8.0f,  6.1f,  -8.0f,   5.1f,  -6.0f,   5.1f,  -1.0f,   17.1f, -2.0f,   21.1f, -13.0f,  13.4f, -2.0f,   7.2f,
+    -12.0f, 7.1f,  -6.0f,   7.1f,  -6.0f,   10.1f, -5.0f,   7.1f,  -4.0f,   14.1f, -3.0f,   8.1f,  -1.0f,   8.1f,
+    -5.0f,  8.1f,  -13.0f,  13.4f, -4.0f,   3.2f,  -14.0f,  7.1f,  -6.0f,   7.1f,  -5.0f,   12.1f, -4.0f,   8.1f,
+    -2.0f,  15.1f, -4.0f,   7.1f,  -1.0f,   8.1f,  -6.0f,   7.1f,  -13.0f,  13.4f, -21.0f,  7.1f,  -5.0f,   8.1f,
+    -4.0f,  14.1f, -4.0f,   7.1f,  -1.0f,   8.1f,  -1.0f,   7.1f,  -4.0f,   7.1f,  -1.0f,   8.1f,  -6.0f,   7.1f,
+    -13.0f, 3.4f,  -7.0f,   3.4f,  -21.0f,  20.1f, -3.0f,   16.1f, -3.0f,   15.1f, -3.0f,   5.1f,  -5.0f,   7.1f,
+    -1.0f,  8.1f,  -6.0f,   7.1f,  -13.0f,  3.4f,  -7.0f,   3.4f,  -21.0f,  19.1f, -4.0f,   17.1f, -3.0f,   14.1f,
+    -12.0f, 7.1f,  -2.0f,   8.1f,  -7.0f,   6.1f,  -13.0f,  3.4f,  -7.0f,   3.4f,  -21.0f,  18.1f, -4.0f,   8.1f,
+    -2.0f,  8.1f,  -4.0f,   12.1f, -12.0f,  8.1f,  -2.0f,   8.1f,  -7.0f,   6.1f,  -13.0f,  3.4f,  -7.0f,   3.4f,
+    -21.0f, 19.1f, -3.0f,   7.1f,  -4.0f,   8.1f,  -3.0f,   11.1f, -12.0f,  8.1f,  -3.0f,   8.1f,  -7.0f,   6.1f,
+    -13.0f, 3.4f,  -7.0f,   3.4f,  -21.0f,  20.1f, -1.0f,   8.1f,  -5.0f,   7.1f,  -4.0f,   10.1f, -11.0f,  8.1f,
+    -4.0f,  8.1f,  -7.0f,   6.1f,  -13.0f,  3.4f,  -7.0f,   3.4f,  -21.0f,  20.1f, -1.0f,   8.1f,  -5.0f,   7.1f,
+    -4.0f,  9.1f,  -10.0f,  9.1f,  -5.0f,   8.1f,  -7.0f,   6.1f,  -13.0f,  3.4f,  -7.0f,   3.4f,  -21.0f,  7.1f,
+    -6.0f,  15.1f, -6.0f,   7.1f,  -5.0f,   8.1f,  -9.0f,   9.1f,  -6.0f,   8.1f,  -6.0f,   7.1f,  -8.0f,   23.4f,
+    -16.0f, 7.1f,  -7.0f,   14.1f, -6.0f,   7.1f,  -4.0f,   9.1f,  -8.0f,   9.1f,  -7.0f,   8.1f,  -6.0f,   7.1f,
+    -8.0f,  23.4f, -16.0f,  7.1f,  -7.0f,   15.1f, -5.0f,   7.1f,  -4.0f,   10.1f, -6.0f,   9.1f,  -8.0f,   8.1f,
+    -6.0f,  7.1f,  -8.0f,   23.4f, -16.0f,  7.1f,  -6.0f,   8.1f,  -1.0f,   7.1f,  -4.0f,   8.1f,  -3.0f,   12.1f,
+    -4.0f,  8.1f,  -10.0f,  8.1f,  -4.0f,   9.1f,  -8.0f,   3.4f,  -7.0f,   3.4f,  -7.0f,   3.4f,  -16.0f,  21.1f,
+    -1.0f,  8.1f,  -3.0f,   7.1f,  -3.0f,   13.1f, -4.0f,   16.1f, -2.0f,   20.1f, -9.0f,   3.4f,  -7.0f,   3.4f,
+    -7.0f,  3.4f,  -16.0f,  20.1f, -2.0f,   18.1f, -3.0f,   14.1f, -2.0f,   18.1f, -1.0f,   20.1f, -9.0f,   3.4f,
+    -7.0f,  3.4f,  -7.0f,   3.4f,  -16.0f,  20.1f, -3.0f,   16.1f, -3.0f,   16.1f, -1.0f,   18.1f, -1.0f,   19.1f,
+    -10.0f, 3.4f,  -7.0f,   3.4f,  -7.0f,   3.4f,  -16.0f,  19.1f, -5.0f,   15.1f, -2.0f,   8.1f,  -2.0f,   7.1f,
+    -1.0f,  18.1f, -1.0f,   18.1f, -11.0f,  3.4f,  -7.0f,   3.4f,  -7.0f,   3.4f,  -16.0f,  18.1f, -7.0f,   13.1f,
+    -3.0f,  7.1f,  -3.0f,   26.1f, -1.0f,   17.1f, -12.0f,  3.4f,  -7.0f,   3.4f,  -7.0f,   3.4f,  -17.0f,  15.1f,
+    -10.0f, 10.1f, -6.0f,   5.1f,  -5.0f,   6.1f,  -2.0f,   16.1f, -3.0f,   14.1f, -14.0f,  3.4f,  -7.0f,   3.4f,
+    -7.0f,  3.4f,  -44.0f,  6.1f,  -73.0f,  23.4f, -115.0f, 40.3f, -106.0f, 40.3f, -106.0f, 40.3f, -106.0f};
 
 float frand()
 {
@@ -210,7 +222,9 @@ Sprite* PhysicsDemo::makeBall(Vec2 point, float radius, const ax::PhysicsMateria
 
     ball->setScale(0.13f * radius);
 
-    ball->addComponent(Rigidbody2D::createCircle(ball->getContentSize().width / 2, material));
+    auto rigidbody = Rigidbody2D::createCircle(ball->getContentSize().width / 2, material);
+    rigidbody->setTag(DRAG_BODYS_BITS);
+    ball->addComponent(rigidbody);
     ball->setPosition(Vec2(point.x, point.y));
 
     return ball;
@@ -232,7 +246,9 @@ Sprite* PhysicsDemo::makeBox(Vec2 point, Size size, int color, const ax::Physics
     box->setScaleX(size.width / 100.0f);
     box->setScaleY(size.height / 100.0f);
 
-    box->addComponent(Rigidbody2D::createBox(box->getContentSize(), material));
+    auto rigidbody = Rigidbody2D::createBox(box->getContentSize(), material);
+    rigidbody->setTag(DRAG_BODYS_BITS);
+    box->addComponent(rigidbody);
 
     box->setPosition(Vec2(point.x, point.y));
 
@@ -286,7 +302,7 @@ bool PhysicsDemo::onTouchBegan(Touch* touch, Event* event)
     {
         Node* mouse   = Node::create();
         auto moseBody = Rigidbody2D::create();
-        moseBody->setDynamic(false);
+        moseBody->setKinematic();
         mouse->addComponent(moseBody);
         this->addChild(mouse);
         auto joint = TargetJoint2D::create(location, body);
@@ -333,7 +349,6 @@ void PhysicsDemoLogoSmash::onEnter()
                            Color32::GREEN, Color32(0, 178, 255), Color32(255, 174, 201)};
 
     _physicsWorld2D->setGravity(Vec2(0.0f, 0.0f));
-    _physicsWorld2D->setUpdateRate(1);
 
     _ball = SpriteBatchNode::create(
         "Images/ball.png", LOGO_WIDTH_COLORED * LOGO_HEIGHT_COLORED + LOGO_WIDTH_COLORED + LOGO_HEIGHT_COLORED);
@@ -382,7 +397,7 @@ void PhysicsDemoLogoSmash::onEnter()
         }
         index++;
     }
-    auto bullet = makeBall(Vec2(0.0f, 0.0f), 10, PhysicsMaterial2D(physics2d::MaxDensity, 0, 0));
+    auto bullet = makeBall(Vec2(0.0f, 0.0f), 10, PhysicsMaterial2D(phconsts::UpperBound, 0, 0));
     bullet->getRigidbody2D()->setVelocity(Vec2(200.0f, 0.0f));
     bullet->setPosition(Vec2(-100.0f, VisibleRect::getVisibleRect().size.height / 2));
     _ball->addChild(bullet);
@@ -397,6 +412,7 @@ std::string PhysicsDemoLogoSmash::title() const
 
 PhysicsDemoClickAdd::~PhysicsDemoClickAdd()
 {
+    Device::setPreferredOrientation(Device::Orientation::SensorLandscape);
     Device::setAccelerometerEnabled(false);
 }
 
@@ -418,6 +434,8 @@ void PhysicsDemoClickAdd::onEnter()
     this->addChild(node);
 
     addGrossiniAtPosition(VisibleRect::center());
+
+    Device::setPreferredOrientation(Device::Orientation::Landscape);
 }
 
 std::string PhysicsDemoClickAdd::subtitle() const
@@ -472,8 +490,9 @@ void PhysicsDemoPyramidStack::onEnter()
 
     auto ball = Sprite::create("Images/ball.png");
     ball->setScale(1);
-    ball->setTag(100 | DRAG_BODYS_BITS);
+    ball->setTag(100);
     auto body = Rigidbody2D::createCircle(10);
+    body->setTag(DRAG_BODYS_BITS);
     ball->addComponent(body);
     ball->setPosition(VisibleRect::bottom() + Vec2(0.0f, 60.0f));
     this->addChild(ball);
@@ -484,15 +503,14 @@ void PhysicsDemoPyramidStack::onEnter()
     {
         for (int j = 0; j <= i; j++)
         {
-            auto sp = addGrossiniAtPosition(VisibleRect::bottom() + Vec2((i / 2 - j) * 11, (14 - i) * 23 + 100), 0.2f);
-            sp->setTag(DRAG_BODYS_BITS);
+            addGrossiniAtPosition(VisibleRect::bottom() + Vec2((i / 2 - j) * 11, (14 - i) * 23 + 100), 0.2f);
         }
     }
 }
 
 void PhysicsDemoPyramidStack::updateOnce(float /*delta*/)
 {
-    auto ball = getChildByTag(100 | DRAG_BODYS_BITS);
+    auto ball = getChildByTag(100);
     if (ball)
         ball->setScale(ball->getScale() * 3);
 }
@@ -690,11 +708,6 @@ void PhysicsDemoActions::onEnter()
     Sprite* sp4 = addGrossiniAtPosition(VisibleRect::leftTop() + Vec2(50.0f, -50.0f));
     sp4->getRigidbody2D()->setGravityEnabled(false);
 
-    sp1->setTag(DRAG_BODYS_BITS);
-    sp2->setTag(DRAG_BODYS_BITS);
-    sp3->setTag(DRAG_BODYS_BITS);
-    sp4->setTag(DRAG_BODYS_BITS);
-
     auto actionTo     = JumpTo::create(2, Vec2(100, 100), 50, 4);
     auto actionBy     = JumpBy::create(2, Vec2(300, 0), 50, 4);
     auto actionUp     = JumpBy::create(2, Vec2(0, 50), 80, 4);
@@ -733,7 +746,7 @@ void PhysicsDemoJoints::onEnter()
     Rigidbody2D* worldBox = Rigidbody2D::create();
     node->addComponent(worldBox);
 
-    worldBox->setDynamic(false);
+    worldBox->setBodyType(Rigidbody2D::StaticBody);
     node->setPosition(Point::ZERO);
     this->addChild(node);
 
@@ -755,34 +768,31 @@ void PhysicsDemoJoints::onEnter()
             case 0:
             {
                 auto sp1            = makeBall(offset - Vec2(30, 0), 10);
-                auto sp1Rigidbody2D = sp1->getRigidbody2D();
-                sp1->setTag(DRAG_BODYS_BITS);
-
                 auto sp2            = makeBall(offset + Vec2(30, 0), 10);
                 auto sp2Rigidbody2D = sp2->getRigidbody2D();
-                sp2->setTag(DRAG_BODYS_BITS);
+
+                auto anchor1 = sp1->getRigidbody2D()->world2Local(offset);
+                auto anchor2 = sp2Rigidbody2D->world2Local(offset);
 
                 auto joint = PivotJoint2D::create(sp2Rigidbody2D);
-                joint->setAnchorsInParentSpace(offset);
+                joint->setAnchors(anchor1, anchor2);
                 sp1->addComponent(joint);
 
                 this->addChild(sp1);
                 this->addChild(sp2);
+
                 break;
             }
             case 1:
             {
-
                 auto sp1            = makeBall(offset - Vec2(30.0f, 0.0f), 10);
-                auto sp1Rigidbody2D = sp1->getRigidbody2D();
-                sp1->setTag(DRAG_BODYS_BITS);
-
                 auto sp2            = makeBox(offset + Vec2(30.0f, 0.0f), Size(30.0f, 10.0f));
                 auto sp2Rigidbody2D = sp2->getRigidbody2D();
-                sp2->setTag(DRAG_BODYS_BITS);
 
                 FixedJoint2D* joint = FixedJoint2D::create(sp2Rigidbody2D);
-                joint->setAnchorsInParentSpace(offset);
+                auto anchor1        = sp1->getRigidbody2D()->world2Local(offset);
+                auto anchor2        = sp2Rigidbody2D->world2Local(offset);
+                joint->setAnchors(anchor1, anchor2);
                 sp1->addComponent(joint);
 
                 this->addChild(sp1);
@@ -792,12 +802,8 @@ void PhysicsDemoJoints::onEnter()
             case 2:
             {
                 auto sp1            = makeBall(offset - Vec2(30.0f, 0.0f), 10);
-                auto sp1Rigidbody2D = sp1->getRigidbody2D();
-                sp1->setTag(DRAG_BODYS_BITS);
-
                 auto sp2            = makeBox(offset + Vec2(30.0f, 0.0f), Size(30.0f, 10.0f));
                 auto sp2Rigidbody2D = sp2->getRigidbody2D();
-                sp2->setTag(DRAG_BODYS_BITS);
 
                 auto joint = DistanceJoint2D::create(sp2Rigidbody2D);
                 sp1->addComponent(joint);
@@ -809,12 +815,8 @@ void PhysicsDemoJoints::onEnter()
             case 3:
             {
                 auto sp1            = makeBall(offset - Vec2(30.0f, 0.0f), 10);
-                auto sp1Rigidbody2D = sp1->getRigidbody2D();
-                sp1->setTag(DRAG_BODYS_BITS);
-
                 auto sp2            = makeBox(offset + Vec2(30.0f, 0.0f), Size(30.0f, 10.0f));
                 auto sp2Rigidbody2D = sp2->getRigidbody2D();
-                sp2->setTag(DRAG_BODYS_BITS);
 
                 auto joint = DistanceJoint2D::create(sp2Rigidbody2D);
                 joint->setLimits({30.0f, 52.0f});
@@ -827,12 +829,8 @@ void PhysicsDemoJoints::onEnter()
             case 4:
             {
                 auto sp1            = makeBall(offset - Vec2(30.0f, 0.0f), 10);
-                auto sp1Rigidbody2D = sp1->getRigidbody2D();
-                sp1->setTag(DRAG_BODYS_BITS);
-
                 auto sp2            = makeBox(offset + Vec2(30.0f, 0.0f), Size(30.0f, 10.0f));
                 auto sp2Rigidbody2D = sp2->getRigidbody2D();
-                sp2->setTag(DRAG_BODYS_BITS);
 
                 auto joint = SpringJoint2D::create(500.0f, 0.3f, sp2Rigidbody2D);
                 sp1->addComponent(joint);
@@ -844,12 +842,8 @@ void PhysicsDemoJoints::onEnter()
             case 5:
             {
                 auto sp1            = makeBall(offset - Vec2(30.0f, 0.0f), 10);
-                auto sp1Rigidbody2D = sp1->getRigidbody2D();
-                sp1->setTag(DRAG_BODYS_BITS);
-
                 auto sp2            = makeBox(offset + Vec2(30.0f, 0.0f), Size(30.0f, 10.0f));
                 auto sp2Rigidbody2D = sp2->getRigidbody2D();
-                sp2->setTag(DRAG_BODYS_BITS);
 
                 // GrooveJoint2D
                 Vec2 sliderOrigin{30.0f, 15.0f};
@@ -871,11 +865,9 @@ void PhysicsDemoJoints::onEnter()
             {
                 auto sp1            = makeBox(offset - Vec2(30.0f, 0.0f), Size(30.0f, 10.0f));
                 auto sp1Rigidbody2D = sp1->getRigidbody2D();
-                sp1->setTag(DRAG_BODYS_BITS);
 
                 auto sp2            = makeBox(offset + Vec2(30.0f, 0.0f), Size(30.0f, 10.0f));
                 auto sp2Rigidbody2D = sp2->getRigidbody2D();
-                sp2->setTag(DRAG_BODYS_BITS);
 
                 auto joint = SpringJoint2D::create(3000.0f, 60.0f, sp2Rigidbody2D);
                 joint->setRestLength(60);
@@ -889,14 +881,12 @@ void PhysicsDemoJoints::onEnter()
             {
                 auto sp1            = makeBall(offset - Vec2(0.0f, 10.0f), 10.0f);
                 auto sp1Rigidbody2D = sp1->getRigidbody2D();
-                sp1->setTag(DRAG_BODYS_BITS);
 
                 auto sp2            = makeBox(offset + Vec2(0.0f, 10.0f), Size(30.0f, 10.0f));
                 auto sp2Rigidbody2D = sp2->getRigidbody2D();
-                sp2->setTag(DRAG_BODYS_BITS);
 
                 auto joint = WheelJoint2D::create(sp2Rigidbody2D);
-                joint->setMotor(JointMotor2D{60.0f, physics2d::MaxForce});
+                joint->setMotor(JointMotor2D{60.0f, phconsts::MaxForce});
                 joint->setLimits({-1.0f, 1.0f});
                 sp1->addComponent(joint);
 
@@ -908,11 +898,9 @@ void PhysicsDemoJoints::onEnter()
             {
                 auto sp1            = makeBox(offset - Vec2(30.0f, 0.0f), Size(30.0f, 10.0f));
                 auto sp1Rigidbody2D = sp1->getRigidbody2D();
-                sp1->setTag(DRAG_BODYS_BITS);
 
                 auto sp2            = makeBox(offset + Vec2(30.0f, 0.0f), Size(30.0f, 10.0f));
                 auto sp2Rigidbody2D = sp2->getRigidbody2D();
-                sp2->setTag(DRAG_BODYS_BITS);
 
                 auto joint = FilterJoint2D::create(sp2Rigidbody2D);
                 sp1->addComponent(joint);
@@ -924,12 +912,8 @@ void PhysicsDemoJoints::onEnter()
             case 9:
             {
                 auto sp1            = makeBox(offset - Vec2(30.0f, 0.0f), Size(30.0f, 10.0f));
-                auto sp1Rigidbody2D = sp1->getRigidbody2D();
-                sp1->setTag(DRAG_BODYS_BITS);
-
                 auto sp2            = makeBox(offset + Vec2(30.0f, 0.0f), Size(30.0f, 10.0f));
                 auto sp2Rigidbody2D = sp2->getRigidbody2D();
-                sp2->setTag(DRAG_BODYS_BITS);
 
                 sp1->addComponent(PinJoint2D::create(sp1->getPosition(), worldBox));
                 sp2->addComponent(PinJoint2D::create(sp2->getPosition(), worldBox));
@@ -945,15 +929,13 @@ void PhysicsDemoJoints::onEnter()
             case 10:
             {
                 auto sp1            = makeBox(offset - Vec2(30.0f, 0.0f), Size(30.0f, 10.0f));
-                auto sp1Rigidbody2D = sp1->getRigidbody2D();
-                sp1->setTag(DRAG_BODYS_BITS);
-
                 auto sp2            = makeBox(offset + Vec2(30.0f, 0.0f), Size(30.0f, 10.0f));
                 auto sp2Rigidbody2D = sp2->getRigidbody2D();
-                sp2->setTag(DRAG_BODYS_BITS);
 
-                sp1->addComponent(PinJoint2D::create(sp1->getPosition(), worldBox));
-                sp2->addComponent(PinJoint2D::create(sp2->getPosition(), worldBox));
+                auto pin1 = PinJoint2D::create(sp1->getPosition(), worldBox);
+                auto pin2 = PinJoint2D::create(sp2->getPosition(), worldBox);
+                sp1->addComponent(pin1);
+                sp2->addComponent(pin2);
 
                 auto joint = MotorJoint2D::create(sp2Rigidbody2D);
                 sp1->addComponent(joint);
@@ -991,9 +973,9 @@ void PhysicsDemoPump::onEnter()
     auto worldBox     = Node::create();
     auto worldBoxBody = Rigidbody2D::create();
     worldBox->addComponent(worldBoxBody);
-    worldBoxBody->setDynamic(false);
+    worldBoxBody->setBodyType(Rigidbody2D::StaticBody);
 
-    PhysicsMaterial2D staticMaterial(physics2d::MaxDensity, 0, 0.5f);
+    PhysicsMaterial2D staticMaterial(phconsts::UpperBound, 0, 0.5f);
     worldBoxBody->addCollider(EdgeSegmentCollider2D::create(VisibleRect::leftTop() + Vec2(50, 0),
                                                             VisibleRect::leftTop() + Vec2(50, -130), staticMaterial));
     worldBoxBody->addCollider(EdgeSegmentCollider2D::create(VisibleRect::leftTop() + Vec2(190, 0),
@@ -1019,7 +1001,6 @@ void PhysicsDemoPump::onEnter()
     {
         auto ball = makeBall(VisibleRect::leftTop() + Vec2(75 + AXRANDOM_0_1() * 90, 0.0f), 22,
                              PhysicsMaterial2D(0.05f, 0.0f, 0.1f));
-        ball->setTag(DRAG_BODYS_BITS);
         ball->setName("ball");
         addChild(ball);
     }
@@ -1058,12 +1039,11 @@ void PhysicsDemoPump::onEnter()
     auto bgearBody = Rigidbody2D::createCircle(100);
     bgearBody->setCategoryBits(0x04);
     auto bgear = Node::create();
-    bgear->setTag(2);
+    bgearBody->setTag(2);
     bgear->setName("big-gear");
     bgear->addComponent(bgearBody);
     bgear->setPosition(VisibleRect::leftBottom() + Vec2(275.0f, 0.0f));
     this->addChild(bgear);
-    auto tag = bgear->getTag();
 
     bgear->addComponent(PinJoint2D::create(bgear->getPosition(), worldBoxBody));
     auto motorJoint = MotorJoint2D::create(bgearBody);
@@ -1092,7 +1072,7 @@ void PhysicsDemoPump::onEnter()
     };
 
     auto pluggerBody = Rigidbody2D::createPolygon(polygonVertices, PhysicsMaterial2D(0.01f, 0.0f, 0.5f));
-    pluggerBody->setDynamic(true);
+    pluggerBody->setDynamic();
     pluggerBody->setAutoMass(false);
     pluggerBody->setMass(30);
     pluggerBody->setMoment(100000);
@@ -1118,9 +1098,10 @@ void PhysicsDemoPump::update(float delta)
 {
     for (const auto& child : getChildren())
     {
-        if (child->getTag() == -1)
+        auto rigidbody = child->getRigidbody2D();
+        if (!rigidbody)
             continue;
-        if ((child->getTag() & DRAG_BODYS_BITS) && child->getPosition().y < 0.0f)
+        if ((rigidbody->getTag() & DRAG_BODYS_BITS) && child->getPosition().y < 0.0f)
         {
             child->setPosition(VisibleRect::leftTop() + Vec2(75 + AXRANDOM_0_1() * 90, 0.0f));
             auto rigidbody = child->getRigidbody2D();
@@ -1189,7 +1170,8 @@ void PhysicsDemoOneWayPlatform::onEnter()
     PhysicsDemo::onEnter();
 
     _physicsWorld2D->setGlobalEventEnabled(
-        PhysicsWorld2D::CollisionEventBits::PreSolve | Rigidbody2D::CollisionEventBits::Hit, true);
+        ContactEventBits::PreSolve | ContactEventBits::Hit | ContactEventBits::Contact, true);
+    _physicsWorld2D->setPreSolveCallback(AX_CALLBACK_1(PhysicsDemoOneWayPlatform::onPreSolve, this));
 
     auto touchListener          = EventListenerTouchOneByOne::create();
     touchListener->onTouchBegan = AX_CALLBACK_2(PhysicsDemoOneWayPlatform::onTouchBegan, this);
@@ -1204,22 +1186,34 @@ void PhysicsDemoOneWayPlatform::onEnter()
 
     auto platform     = makeBox(VisibleRect::center(), Size(200.0f, 50.0f));
     auto platformBody = platform->getRigidbody2D();
-    platformBody->setDynamic(false);
+    platformBody->setBodyType(Rigidbody2D::StaticBody);
     this->addChild(platform);
 
     auto ball     = makeBall(VisibleRect::center() - Vec2(0.0f, 50.0f), 20);
     auto ballBody = ball->getRigidbody2D();
     ballBody->setVelocity(Vec2(0.0f, 150.0f));
-    ball->setTag(DRAG_BODYS_BITS);
     this->addChild(ball);
 
-    auto contactListener            = Contact2DListenerWithBodies::create(platformBody, ballBody);
-    contactListener->onPreSolve     = AX_CALLBACK_1(PhysicsDemoOneWayPlatform::onPreSolve, this);
+    auto contactListener             = ContactEventListener2D::create(platformBody, ballBody);
+    contactListener->onContactFilter = [_a = platformBody, _b = ballBody](ContactEvent2D* event) {
+        auto colliderA = event->getColliderA();
+        auto colliderB = event->getColliderB();
+        if ((colliderA->getAttachedBody() == _a && colliderB->getAttachedBody() == _b) ||
+            (colliderA->getAttachedBody() == _b && colliderB->getAttachedBody() == _a))
+        {
+            return true;
+        }
+
+        return false;
+    };
+
+    contactListener->onContactBegin = [](ContactEvent2D* event) { AXLOGI("onContactBegin"); };
+    contactListener->onContactEnd   = [](ContactEvent2D* event) { AXLOGI("onContactEnd"); };
     contactListener->onCollisionHit = AX_CALLBACK_1(PhysicsDemoOneWayPlatform::onCollisionHit, this);
     _eventDispatcher->addEventListenerWithSceneGraphPriority(contactListener, this);
 }
 
-bool PhysicsDemoOneWayPlatform::onPreSolve(Contact2D* contact)
+bool PhysicsDemoOneWayPlatform::onPreSolve(const ContactInfo2D& info)
 {
     // Axmol-3.0 physics2d is built on Box2D v3.
     // In Box2D v3, the contact normal always points from shape A toward shape B.
@@ -1227,12 +1221,12 @@ bool PhysicsDemoOneWayPlatform::onPreSolve(Contact2D* contact)
     // the ball is above the platform (the normal points downward).
     // In this case we return true to allow the collision.
     // If normal.y <= 0, the ball is below the platform and the collision is ignored.
-    auto normalY = contact->getContactInfo().normal.y;
+    auto normalY = info.normal.y;
 
     return normalY > 0;
 }
 
-void PhysicsDemoOneWayPlatform::onCollisionHit(ax::Contact2D* contact)
+void PhysicsDemoOneWayPlatform::onCollisionHit(ax::ContactEvent2D* contact)
 {
     auto& contactInfo = contact->getContactInfo();
     if (contactInfo.pointCount > 0)
@@ -1266,7 +1260,7 @@ void PhysicsDemoSlice::onEnter()
     Vec2 points[4] = {Vec2(-100.0f, -100.0f), Vec2(-100.0f, 100.0f), Vec2(100.0f, 100.0f), Vec2(100.0f, -100.0f)};
     box->addComponent(Rigidbody2D::createPolygon(points));
     box->setPosition(VisibleRect::center());
-    box->setTag(_sliceTag);
+    box->getRigidbody2D()->setTag(_sliceTag);
     box->setName(fmt::format("slice-{}", ++_sliceId));
     addChild(box);
 }
@@ -1334,7 +1328,7 @@ void PhysicsDemoSlice::clipPoly(PolygonCollider2D* collider, Vec2 normal, float 
     node->addComponent(polygon);
     polygon->setVelocity(body->getVelocityAtWorldPoint(center));
     polygon->setAngularVelocity(body->getAngularVelocity());
-    node->setTag(_sliceTag);
+    polygon->setTag(_sliceTag);
     node->setName(fmt::format("slice-{}", ++_sliceId));
     addChild(node);
 }
@@ -1387,7 +1381,9 @@ void PhysicsContactTest::onEnter()
 {
     PhysicsDemo::onEnter();
 
-    _physicsWorld2D->setGlobalEventEnabled(PhysicsWorld2D::CollisionEventBits::PreSolve, true);
+    _physicsWorld2D->setGlobalEventEnabled(ContactEventBits::PreSolve, true);
+
+    _physicsWorld2D->setPreSolveCallback(AX_CALLBACK_1(PhysicsContactTest::onPreSolve, this));
 
     _physicsWorld2D->setGravity(Vec2::ZERO);
     auto s = VisibleRect::getVisibleRect().size;
@@ -1559,11 +1555,6 @@ void PhysicsContactTest::resetTest()
     root->addChild(wall);
 
     // The wall default categoryBits = 1
-
-    auto contactListener        = Contact2DListener::create();
-    contactListener->onPreSolve = AX_CALLBACK_1(PhysicsContactTest::onPreSolve, this);
-    _eventDispatcher->addEventListenerWithSceneGraphPriority(contactListener, this);
-
     // all rigidbody should collide with the wall world box (categoryBits=1)
 
     // yellow box, will collide with itself and blue box.
@@ -1639,10 +1630,10 @@ void PhysicsContactTest::resetTest()
     }
 }
 
-bool PhysicsContactTest::onPreSolve(Contact2D* contact)
+bool PhysicsContactTest::onPreSolve(const ContactInfo2D& info)
 {
-    auto colA = contact->getColliderA();
-    auto colB = contact->getColliderB();
+    auto colA = info.colliderA;
+    auto colB = info.colliderB;
     if (!colA || !colB)
         return true;
 
@@ -1696,7 +1687,7 @@ void PhysicsPositionRotationTest::onEnter()
     anchorNode->setPosition(100, 100);
     anchorNode->setScale(0.25);
     anchorNode->addComponent(Rigidbody2D::createBox(anchorNode->getContentSize()));
-    anchorNode->setTag(DRAG_BODYS_BITS);
+    anchorNode->getRigidbody2D()->setTag(DRAG_BODYS_BITS);
     addChild(anchorNode);
 
     anchorNode->getRigidbody2D()->setAngularVelocity(-286.0f);
@@ -1706,14 +1697,14 @@ void PhysicsPositionRotationTest::onEnter()
     parent->setPosition(300, 100);
     parent->setScale(0.5);
     parent->addComponent(Rigidbody2D::createBox(parent->getContentSize()));
-    parent->setTag(DRAG_BODYS_BITS);
+    parent->getRigidbody2D()->setTag(DRAG_BODYS_BITS);
     addChild(parent);
 
     auto leftBall = Sprite::create("Images/YellowSquare.png");
     leftBall->setPosition(-50, 0);
     leftBall->Node::setScale(0.5);
     leftBall->addComponent(Rigidbody2D::createBox(leftBall->getContentSize()));
-    leftBall->setTag(DRAG_BODYS_BITS);
+    leftBall->getRigidbody2D()->setTag(DRAG_BODYS_BITS);
     parent->addChild(leftBall);
 
     parent->getRigidbody2D()->setAngularVelocity(286.0f);
@@ -1725,7 +1716,7 @@ void PhysicsPositionRotationTest::onEnter()
     offsetPosNode->addComponent(body);
     body->setPositionOffset(-Vec2(offsetPosNode->getContentSize() / 2));
     body->setRotationOffset(45);
-    offsetPosNode->setTag(DRAG_BODYS_BITS);
+    offsetPosNode->getRigidbody2D()->setTag(DRAG_BODYS_BITS);
     addChild(offsetPosNode);
 
     offsetPosNode->getRigidbody2D()->setAngularVelocity(286.0f);
@@ -1757,7 +1748,7 @@ void PhysicsSetGravityEnableTest::onEnter()
 
     // common box
     auto commonBox = makeBox(Vec2(100, 100), Size(50, 50), 1);
-    commonBox->setTag(1 | DRAG_BODYS_BITS);
+    commonBox->setTag(1);
     auto commonBoxBody = commonBox->getRigidbody2D();
     commonBoxBody->setGravityEnabled(true);
     // Critical fix for Box2D physics behavior difference from Chipmunk in Axmol
@@ -1769,14 +1760,13 @@ void PhysicsSetGravityEnableTest::onEnter()
     commonBoxBody->setRotationEnabled(false);
     addChild(commonBox);
 
-    auto box = makeBox(Vec2(200, 100), Size(50, 50), 2);
-    box->setTag(DRAG_BODYS_BITS);
+    auto box     = makeBox(Vec2(200, 100), Size(50, 50), 2);
     auto boxBody = box->getRigidbody2D();
     boxBody->setGravityEnabled(false);
     addChild(box);
 
     auto ball = makeBall(Vec2(200, 200), 50);
-    ball->setTag(2 | DRAG_BODYS_BITS);
+    ball->setTag(2);
     auto ballBody = ball->getRigidbody2D();
     ballBody->setGravityEnabled(false);
     addChild(ball);
@@ -1786,7 +1776,7 @@ void PhysicsSetGravityEnableTest::onEnter()
 
 void PhysicsSetGravityEnableTest::onScheduleOnce(float /*delta*/)
 {
-    auto ball = getChildByTag(2 | DRAG_BODYS_BITS);
+    auto ball = getChildByTag(2);
 
     auto rigidbody = ball->getRigidbody2D();
     if (rigidbody)
@@ -1839,15 +1829,16 @@ void PhysicsDemoBug5482::onEnter()
 
     _nodeA = Sprite::create("Images/YellowSquare.png");
     _nodeA->setPosition(VisibleRect::center().x - 150, 100);
-    _nodeA->setTag(1 | DRAG_BODYS_BITS);
+    _nodeA->setTag(1);
     this->addChild(_nodeA);
 
     _nodeB = Sprite::create("Images/YellowSquare.png");
     _nodeB->setPosition(VisibleRect::center().x + 150, 100);
-    _nodeB->setTag(2 | DRAG_BODYS_BITS);
+    _nodeB->setTag(2);
     this->addChild(_nodeB);
 
     _body = Rigidbody2D::createBox(_nodeA->getContentSize());
+    _body->setTag(DRAG_BODYS_BITS);
     _body->retain();
 }
 
@@ -1913,7 +1904,7 @@ void PhysicsFixedUpdate::addBall()
     ball->setPosition(100, 100);
     auto ballBody = Rigidbody2D::createCircle(ball->getContentSize().width / 2, PhysicsMaterial2D(0.1f, 1, 0.0f));
     ball->addComponent(ballBody);
-    ball->setTag(DRAG_BODYS_BITS);
+    ballBody->setTag(DRAG_BODYS_BITS);
     ballBody->setVelocity(Point(1000, 20));
     this->addChild(ball);
 }
@@ -1922,17 +1913,8 @@ void PhysicsFixedUpdate::updateStart(float /*delta*/)
 {
     addBall();
 
-    _physicsWorld2D->setFixedUpdateRate(180);
-}
-
-void PhysicsFixedUpdate::update(float /*delta*/)
-{
-
-    // use fixed time and calculate 3 times per frame makes physics simulate more precisely.
-    for (int i = 0; i < 3; ++i)
-    {
-        _physicsWorld2D->step(1 / 180.0f);
-    }
+    setFixedUpdateEnabled(true);
+    setFixedDeltaTime(1 / 180.0f);
 }
 
 std::string PhysicsFixedUpdate::title() const
@@ -1976,7 +1958,8 @@ void PhysicsTransformTest::onEnter()
     _parentSprite->setScale(0.25);
     _parentSprite->addComponent(
         Rigidbody2D::createBox(_parentSprite->getContentSize(), PhysicsMaterial2D(0.1f, 1.0f, 0.0f)));
-    _parentSprite->setTag(1 | DRAG_BODYS_BITS);
+    _parentSprite->setTag(1);
+    _parentSprite->getRigidbody2D()->setTag(DRAG_BODYS_BITS);
     _rootLayer->addChild(_parentSprite);
 
     auto leftBall = Sprite::create("Images/ball.png");
@@ -1984,7 +1967,7 @@ void PhysicsTransformTest::onEnter()
     leftBall->setScale(2);
     leftBall->addComponent(
         Rigidbody2D::createCircle(leftBall->getContentSize().width / 2, PhysicsMaterial2D(0.1f, 1.0f, 0.0f)));
-    leftBall->setTag(DRAG_BODYS_BITS);
+    leftBall->getRigidbody2D()->setTag(DRAG_BODYS_BITS);
     _parentSprite->addChild(leftBall);
 
     ScaleTo* scaleTo   = ScaleTo::create(2.0, 0.5);
@@ -1995,7 +1978,7 @@ void PhysicsTransformTest::onEnter()
     normal->setPosition(300, 100);
     normal->setScale(0.25, 0.5);
     normal->addComponent(Rigidbody2D::createBox(normal->getContentSize(), PhysicsMaterial2D(0.1f, 1.0f, 0.0f)));
-    normal->setTag(DRAG_BODYS_BITS);
+    normal->getRigidbody2D()->setTag(DRAG_BODYS_BITS);
     _rootLayer->addChild(normal);
 
     auto bullet = Sprite::create("Images/ball.png");
@@ -2083,6 +2066,8 @@ void PhysicsDemoPyramidStackFixedUpdate::onEnter()
 {
     PhysicsDemo::onEnter();
 
+    setFixedUpdateEnabled(true);
+
     auto touchListener          = EventListenerTouchOneByOne::create();
     touchListener->onTouchBegan = AX_CALLBACK_2(PhysicsDemoPyramidStackFixedUpdate::onTouchBegan, this);
     touchListener->onTouchMoved = AX_CALLBACK_2(PhysicsDemoPyramidStackFixedUpdate::onTouchMoved, this);
@@ -2098,13 +2083,13 @@ void PhysicsDemoPyramidStackFixedUpdate::onEnter()
     ball->setScale(1);
     auto body = Rigidbody2D::createCircle(10);
     ball->addComponent(body);
-    ball->setTag(100 | DRAG_BODYS_BITS);
+    ball->setTag(100);
+    body->setTag(DRAG_BODYS_BITS);
     ball->setPosition(VisibleRect::bottom() + Vec2(0.0f, 60.0f));
     this->addChild(ball);
 
     _delayTime = 0;
     _isAddBall = false;
-    _physicsWorld2D->setFixedUpdateRate(50);
 
     int count = 1;
     for (int i = 0; i < 14; i++)
@@ -2112,7 +2097,6 @@ void PhysicsDemoPyramidStackFixedUpdate::onEnter()
         for (int j = 0; j <= i; j++)
         {
             auto sp = addGrossiniAtPosition(VisibleRect::bottom() + Vec2((i / 2 - j) * 11, (14 - i) * 23 + 100), 0.2f);
-            sp->setTag(DRAG_BODYS_BITS);
 
             auto label = Label::createWithTTF(fmt::format("{}", count++), "fonts/arial.ttf", 24);
             label->setPosition(sp->getContentSize().width * 0.5f, sp->getContentSize().height * 0.5f);
@@ -2130,11 +2114,13 @@ std::string PhysicsDemoPyramidStackFixedUpdate::title() const
 
 void PhysicsDemoPyramidStackFixedUpdate::fixedUpdate(float delta)
 {
+    Scene::fixedUpdate(delta);
+
     _delayTime += delta;
     if (_delayTime >= 3.0f && !_isAddBall)
     {
         _isAddBall = true;
-        auto ball  = getChildByTag(100 | DRAG_BODYS_BITS);
+        auto ball  = getChildByTag(100);
         if (ball)
             ball->setScale(ball->getScale() * 3);
     }

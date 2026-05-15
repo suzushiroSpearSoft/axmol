@@ -58,6 +58,7 @@ THE SOFTWARE.
 #include "axmol/base/AutoreleasePool.h"
 #include "axmol/base/Environment.h"
 #include "axmol/base/ObjectFactory.h"
+#include "axmol/base/RefPtr.h"
 #include "axmol/platform/Application.h"
 #if defined(AX_ENABLE_AUDIO)
 #    include "axmol/audio/AudioEngine.h"
@@ -341,9 +342,8 @@ void Director::drawScene()
 
     if (_runningScene)
     {
-#if (defined(AX_ENABLE_PHYSICS_2D) || defined(AX_ENABLE_PHYSICS_3D) || defined(AX_ENABLE_NAVMESH))
-        _runningScene->stepPhysicsAndNavigation(_deltaTime);
-#endif
+        _runningScene->tick(_deltaTime);
+
         // clear draw stats
         _renderer->clearDrawStats();
 
@@ -1556,6 +1556,20 @@ void Director::setScheduler(Scheduler* scheduler)
     }
 }
 
+JobHandle Director::runAsync(std::function<void()> task, std::function<void()> done)
+{
+    if (!task)
+        return {};
+
+    RefPtr<Scheduler> scheduler(_scheduler);
+    return _jobSystem->enqueue(
+        [task = std::move(task), done = std::move(done), scheduler = std::move(scheduler)]() mutable {
+        task();
+        if (done)
+            scheduler->runOnAxmolThread(std::move(done));
+    });
+}
+
 void Director::setActionManager(ActionManager* actionManager)
 {
     if (_actionManager != actionManager)
@@ -1600,14 +1614,14 @@ void Director::startAnimation(SetIntervalReason reason)
 
 void Director::queueOperation(AsyncOperation op, void* param)
 {
-#if defined(AX_PLATFORM_PC)
+#if defined(AX_PLATFORM_GLFW)
     _operations.enqueue([=]() { op(param); });
 #else
     _renderView->queueOperation(op, param);
 #endif
 }
 
-#if defined(AX_PLATFORM_PC)
+#if defined(AX_PLATFORM_GLFW)
 void Director::processOperations()
 {
     std::function<void()> op;
@@ -1618,7 +1632,7 @@ void Director::processOperations()
 
 void Director::renderFrame()
 {
-#if defined(AX_PLATFORM_PC)
+#if defined(AX_PLATFORM_GLFW)
     processOperations();
 #endif
 

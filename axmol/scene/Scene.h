@@ -44,7 +44,7 @@ class EventCustom;
 class PhysicsWorld2D;
 #endif
 #if defined(AX_ENABLE_PHYSICS_3D)
-class Physics3DWorld;
+class PhysicsWorld3D;
 #endif
 #if defined(AX_ENABLE_NAVMESH)
 class NavMesh;
@@ -124,10 +124,58 @@ public:
 
     void setCameraOrderDirty() { _cameraOrderDirty = true; }
 
-    void onProjectionChanged(EventCustom* event);
+    /**
+     * @brief Set a camera to be used for debug drawing (physics, navigation, etc.).
+     * @param camera The camera to use for debug rendering.
+     */
+    void setDebugCamera(Camera* camera);
+
+    // fixedStep configuration
+    /**
+     * @brief Set the fixed time step used for physics and logic updates.
+     * @param fixedStep Duration of each fixed update step in seconds.
+     */
+    void setFixedDeltaTime(float fixedStep);
+
+    /**
+     * @brief Set the maximum delta time allowed per frame.
+     *        Prevents excessive accumulation when resuming from pause or lag.
+     * @param maxDt Maximum delta time in seconds.
+     */
+    void setMaxDeltaTime(float maxDt) { _maxDeltaTime = maxDt; }
+
+    /**
+     * @brief Set the maximum number of fixed update steps allowed per frame.
+     *        Acts as a safeguard against spiral-of-death scenarios.
+     * @param maxSteps Maximum fixed steps per frame.
+     */
+    void setMaxFixedStepsPerFrame(int maxSteps) { _maxFixedStepsPerFrame = maxSteps; }
+
+    /**
+     * @brief Set the global time scale multiplier.
+     *        Affects both dynamic and fixed time progression.
+     * @param scale Time scale factor (1.0 = normal speed).
+     */
+    void setTimeScale(float scale) { _timeScale = scale; }
+
+    /**
+     * @brief Enable or disable fixed update processing.
+     * @param enabled True to run fixed updates, false to disable.
+     */
+    void setFixedUpdateEnabled(bool enabled) { _fixedUpdateEnabled = enabled; }
+
+    /**
+     * @brief Check if fixed update is currently enabled.
+     * @return True if fixed update is enabled, false otherwise.
+     */
+    bool isFixedUpdateEnabled() const { return _fixedUpdateEnabled; }
+
+    // query interpolation alpha for rendering
+    float getPhysicsInterpolationAlpha() const { return _physicsInterpolationAlpha; }
 
 private:
     void initDefaultCamera();
+    void onProjectionChanged(EventCustom* event);
 
 protected:
     friend class Node;
@@ -141,12 +189,30 @@ protected:
 
     /* weak ref, default camera created by scene, at _cameras[0], Caution! the default camera can not be added to
      _cameras before onEnter is called. */
-    Camera* _defaultCamera = nullptr;
+    Camera* _defaultCamera{nullptr};
+
+    /**
+     * @brief Set a camera to be used for debug drawing (physics, navigation, etc.).
+     * @param camera The camera to use for debug rendering.
+     */
+    Camera* _debugCamera{nullptr};
+
     /* indicates if the order is dirty and if so then it needs sorting */
-    bool _cameraOrderDirty = true;
+    bool _cameraOrderDirty{true};
+
+    bool _fixedUpdateEnabled{true};
+
     EventListenerCustom* _event;
 
     std::vector<BaseLight*> _lights;
+
+    // fixed-step state
+    double _fixedAccumulator;
+    float _fixedDeltaTime{1.0f / 60.0f};  // default 60Hz
+    int _maxFixedStepsPerFrame{5};        // prevent spiral of death
+    float _timeScale{1.0f};
+    float _maxDeltaTime{0.25f};              // clamp dt to avoid huge jumps
+    float _physicsInterpolationAlpha{0.0f};  // 0..1 for render interpolation
 
 private:
     AX_DISALLOW_COPY_AND_ASSIGN(Scene);
@@ -164,12 +230,7 @@ public:
     /** Get the 3d physics world of the scene.
      * @return The 3d physics world of the scene.
      */
-    Physics3DWorld* getPhysicsWorld3D() { return _physicsWorld3D; }
-
-    /**
-     * Set Physics3D debug draw camera.
-     */
-    void setPhysics3DDebugCamera(Camera* camera);
+    PhysicsWorld3D* getPhysicsWorld3D() { return _physicsWorld3D; }
 #    endif
 
     /** Create a scene with physics.
@@ -179,7 +240,9 @@ public:
 
     bool initWithPhysics();
     bool initPhysicsWorld();
-    virtual void fixedUpdate(float delta) {}
+
+    void tick(float delta);
+    virtual void fixedUpdate(float delta);
 
 protected:
 #    if defined(AX_ENABLE_PHYSICS_2D)
@@ -187,8 +250,7 @@ protected:
 #    endif
 
 #    if defined(AX_ENABLE_PHYSICS_3D)
-    Physics3DWorld* _physicsWorld3D = nullptr;
-    Camera* _physics3dDebugCamera   = nullptr;
+    PhysicsWorld3D* _physicsWorld3D = nullptr;
 #    endif
 #endif  // (defined(AX_ENABLE_PHYSICS_2D) || defined(AX_ENABLE_PHYSICS_3D))
 
@@ -198,14 +260,9 @@ public:
     void setNavMesh(NavMesh* navMesh);
     /** get navigation mesh */
     NavMesh* getNavMesh() const { return _navMesh; }
-    /**
-     * Set NavMesh debug draw camera.
-     */
-    void setNavMeshDebugCamera(Camera* camera);
 
 protected:
-    NavMesh* _navMesh           = nullptr;
-    Camera* _navMeshDebugCamera = nullptr;
+    NavMesh* _navMesh = nullptr;
 #endif
 
 #if (defined(AX_ENABLE_PHYSICS_2D) || defined(AX_ENABLE_PHYSICS_3D) || defined(AX_ENABLE_NAVMESH))

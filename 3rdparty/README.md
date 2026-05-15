@@ -6,19 +6,13 @@
 
 ## astcenc
 - [![Upstream](https://img.shields.io/github/v/release/ARM-software/astc-encoder?label=Upstream)](https://github.com/ARM-software/astc-encoder)
-- Version: 5.3.0
+- Version: 5.4.0
 - License: Apache-2.0
 
 ## Box2D
 - [![Upstream](https://img.shields.io/github/v/release/erincatto/box2d?label=Upstream)](https://github.com/erincatto/box2d)
-- Version: 3.2.0-4996f6e (Until Mar 29, 2026)
+- Version: 3.2.0-8c65dcb (Until May 1, 2026)
 - License: MIT
-
-## Bullet
-- [![Upstream](https://img.shields.io/github/v/release/bulletphysics/bullet3?label=Upstream)](https://github.com/bulletphysics/bullet3)
-- Version: 3.25
-- License: zlib
-- Update method: Compare `axmol/3rdparty/bullet` with `bullet3/src`
 
 ## c-ares
 - [![Upstream](https://img.shields.io/github/v/release/c-ares/c-ares?label=Upstream)](https://github.com/c-ares/c-ares)
@@ -32,7 +26,7 @@
 
 ## ConcurrentQueue
 - [![Upstream](https://img.shields.io/github/v/tag/cameron314/concurrentqueue?label=Upstream)](https://github.com/cameron314/concurrentqueue)
-- Version: 1.0.4
+- Version: 1.0.5
 - License: BSL-1.0
 
 ## ConvertUTF
@@ -42,7 +36,7 @@
 
 ## curl
 - [![Upstream](https://img.shields.io/github/v/release/curl/curl?label=Upstream)](https://github.com/curl/curl)
-- Version: 8.19.0
+- Version: 8.20.0
 - License: Curl (MIT/X)
 
 ## doctest
@@ -57,7 +51,7 @@
 
 ## fast_float
 - [![Upstream](https://img.shields.io/github/v/release/fastfloat/fast_float?label=Upstream)](https://github.com/fastfloat/fast_float)
-- Version: 8.2.4
+- Version: 8.2.5
 - License: MIT
 
 ## flatbuffers
@@ -73,7 +67,9 @@
 
 ## FreeType
 - [![Upstream](https://img.shields.io/gitlab/v/tag/freetype/freetype?label=Upstream)](https://gitlab.freedesktop.org/freetype/freetype)
-- Version: 2.14.3
+- Version: 2.14.3-a6d4860 (Until Apr 12, 2026), with modifications:
+  - ftsystem.c: Use UTF-8 instead ACP for Windows paths
+  - hvfload.c: Fix glyph->metrics.height too-small(=4) issue
 - License: BSD-style (The FreeType Project)
 
 ## Glad
@@ -85,7 +81,7 @@
 
 ## glfw
 - [![Upstream](https://img.shields.io/github/v/release/glfw/glfw?label=Upstream)](https://github.com/glfw/glfw)
-- Version: 3.4 with modified for create as win32 child window support
+- Version: 3.4, with modified for create as win32 child window support
 - License: zlib
 
 ## ghc (iOS < 13 ONLY)
@@ -98,9 +94,14 @@
 - Version: v4.0.0
 - License: MIT-like
 
+## JoltPhysics
+- [![Upstream](https://img.shields.io/github/v/release/jrouwe/JoltPhysics?label=Upstream)](https://github.com/jrouwe/JoltPhysics)
+- Version: v5.5.0
+- License: MIT
+
 ## jpeg-turbo
 - [![Upstream](https://img.shields.io/github/v/release/libjpeg-turbo/libjpeg-turbo?label=Upstream)](https://github.com/libjpeg-turbo/libjpeg-turbo)
-- Version: 3.1.4
+- Version: 3.1.4.1
 - License: BSD-style (IJG,BSD-3-Clause,zlib)
 
 ## kcp
@@ -110,7 +111,7 @@
 
 ## llhttp
 - [![Upstream](https://img.shields.io/github/v/release/nodejs/llhttp?label=Upstream)](https://github.com/nodejs/llhttp)
-- Version: 9.3.1
+- Version: 9.4.1
 - License: MIT
 
 ## lua
@@ -121,12 +122,12 @@
   
 - sol2
   - [![Upstream](https://img.shields.io/github/v/tag/ThePhD/sol2?label=Upstream)](https://github.com/ThePhD/sol2)
-  - Version: 3.5.0 with modified for lua-5.5 support
+  - Version: 3.5.0, with modified for lua-5.5 support
   - License: MIT
 
 - luajit
   - Upstream: https://github.com/LuaJIT/LuaJIT
-  - Version: 2.1-659a616
+  - Version: 2.1-18b087c
   - License: MIT
 
 - tolua
@@ -146,7 +147,7 @@
 
 ## minimp3
 - Upstream: https://github.com/lieff/minimp3
-- Version: git afb604c(318) with modified for UWP apps support
+- Version: git afb604c(318), with modified for UWP apps support
 - License: CC0-1.0
 
 ## mio
@@ -182,22 +183,24 @@
 
 ## OpenAL Soft
 - [![Upstream](https://img.shields.io/github/v/release/kcat/openal-soft?label=Upstream)](https://github.com/kcat/openal-soft)
-- Version: 1.25.1-b2255be
+- Version: 1.25.2
 - Modifications: 
   - Remove `-Werror=undef`
   - Linking `fmt::fmt` instead `alsoft::fmt`
   - Exclude target `alsoft::excommon`
   - Fix `al::char_as_u8/al::u8_as_char` in `common/alstring.hpp` with compiler flag: `-fno-char8_t` or `/Zc:char8_t-`
+  - Disable non‑standard [[clang::nonblocking]] attribute to avoid compiler compatibility issues
+  - Restrict warning flags scope to target: `alsoft.common`
 - License: LGPL-2.1
 
 ## OpenSSL
 - [![Upstream](https://img.shields.io/github/v/release/openssl/openssl?label=Upstream)](https://github.com/openssl/openssl)
-- Version: 3.0.19
+- Version: 3.0.20
 - License: Apache-2.0
 
 ## png
 - [![Upstream](https://img.shields.io/github/v/tag/glennrp/libpng?label=Upstream)](https://github.com/glennrp/libpng)
-- Version: 1.6.56
+- Version: 1.6.58
 - License: PNG Reference Library License version 2
 
 ## poly2tri
@@ -219,12 +222,12 @@
 
 ## recast
 - Upstream: [![Upstream](https://img.shields.io/github/v/tag/recastnavigation/recastnavigation?label=Upstream)](https://github.com/recastnavigation/recastnavigation) 
-- Version: 1.6.0 with dtCrowd::getEditableAgentAnim
+- Version: 1.6.0, with dtCrowd::getEditableAgentAnim
 - License: zlib
 
 ## robin-map
 - [![Upstream](https://img.shields.io/github/v/tag/Tessil/robin-map?label=Upstream)](https://github.com/Tessil/robin-map)
-- Version: 1.4.1 with modified for stl compatibility
+- Version: 1.4.1, with modified for stl compatibility
     - Modify `robin_map::iterator->second` to mutable same with `stl map/unordered_map`
     - Forward `robin_map::operator[]` key by `std::forward` same with `stl map/unordered_map`
     - Improve code compiler compatibility, i.g. `std::max` ==> `(std::max)`
@@ -232,7 +235,7 @@
 
 ## simdjson
 - [![Upstream](https://img.shields.io/github/v/tag/simdjson/simdjson?label=Upstream)](https://github.com/simdjson/simdjson)
-- Version: 4.5.0
+- Version: 4.6.3
 - License: Apache-2.0
 
 ## stb (stb_image)
@@ -242,7 +245,7 @@
 
 ## unzip (minizip-1.2)
 - Upstream: https://github.com/simdsoft/mz12
-- Version: 1.2 with bugfixs & improvements
+- Version: 1.2, with bugfixs & improvements
 - License: zlib
 
 ## webp
@@ -262,7 +265,7 @@
 
 ## yasio
 - [![Upstream](https://img.shields.io/github/v/release/yasio/yasio?label=Upstream)](https://github.com/yasio/yasio)
-- Version: 4.3.2
+- Version: 4.4.0
 - License: MIT WITH Anti-996
 
 ## zlib

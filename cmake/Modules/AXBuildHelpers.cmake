@@ -1,7 +1,7 @@
 include(CMakeParseArguments)
-find_program(PWSH_PROG NAMES pwsh powershell NO_PACKAGE_ROOT_PATH NO_CMAKE_PATH NO_CMAKE_ENVIRONMENT_PATH NO_CMAKE_SYSTEM_PATH NO_CMAKE_FIND_ROOT_PATH)
+find_program(PWSH_EXECUTABLE NAMES pwsh powershell NO_PACKAGE_ROOT_PATH NO_CMAKE_PATH NO_CMAKE_ENVIRONMENT_PATH NO_CMAKE_SYSTEM_PATH NO_CMAKE_FIND_ROOT_PATH)
 
-if(NOT PWSH_PROG)
+if(NOT PWSH_EXECUTABLE)
   message("powershell not found.")
   message(FATAL_ERROR "Please install it https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell, and run CMake again.")
 endif()
@@ -55,7 +55,7 @@ function(ax_sync_target_res ax_target)
       # get_filename_component(link_folder ${opt_LINK_TO} DIRECTORY)
       get_filename_component(link_folder_abs ${opt_LINK_TO} ABSOLUTE)
       add_custom_command(TARGET ${sync_target_name} POST_BUILD
-        COMMAND ${PWSH_PROG} ARGS ${_AX_ROOT}/1k/fsync.ps1
+        COMMAND ${PWSH_EXECUTABLE} ARGS ${_AX_ROOT}/1k/fsync.ps1
         -s ${cc_folder} -d ${link_folder_abs} -l ${opt_SYM_LINK}
       )
     endforeach()
@@ -96,18 +96,18 @@ function(ax_sync_lua_scripts ax_target src_dir dst_dir)
 
   if(MSVC)
     add_custom_command(TARGET ${luacompile_target} POST_BUILD
-      COMMAND ${PWSH_PROG} ARGS ${_AX_ROOT}/1k/fsync.ps1
+      COMMAND ${PWSH_EXECUTABLE} ARGS ${_AX_ROOT}/1k/fsync.ps1
       -s ${src_dir} -d ${dst_dir}
     )
   else()
     if("${CMAKE_BUILD_TYPE}" STREQUAL "")
       add_custom_command(TARGET ${luacompile_target} POST_BUILD
-        COMMAND ${PWSH_PROG} ARGS ${_AX_ROOT}/1k/fsync.ps1
+        COMMAND ${PWSH_EXECUTABLE} ARGS ${_AX_ROOT}/1k/fsync.ps1
         -s ${src_dir} -d ${dst_dir}
       )
     else()
       add_custom_command(TARGET ${luacompile_target} POST_BUILD
-        COMMAND ${PWSH_PROG} ARGS ${_AX_ROOT}/1k/fsync.ps1
+        COMMAND ${PWSH_EXECUTABLE} ARGS ${_AX_ROOT}/1k/fsync.ps1
         -s ${src_dir} -d ${dst_dir}
       )
     endif()
@@ -587,16 +587,6 @@ function(ax_setup_app_config app_name)
       XCODE_EMBED_FRAMEWORKS_REMOVE_HEADERS_ON_COPY ON
     )
 
-    # Detecting Xcode version
-    execute_process(
-      COMMAND xcodebuild -version
-      OUTPUT_VARIABLE XCODE_VERSION_RAW
-      OUTPUT_STRIP_TRAILING_WHITESPACE
-    )
-    string(REGEX MATCH "Xcode ([0-9]+\\.[0-9]+)" _match "${XCODE_VERSION_RAW}")
-    set(XCODE_VERSION "${CMAKE_MATCH_1}")
-
-    message(STATUS "Detected Xcode version: ${XCODE_VERSION}")
     if(XCODE_VERSION VERSION_LESS_EQUAL "14.2")
       message(STATUS
         "Detected Xcode ${XCODE_VERSION} (<= 14.2): "

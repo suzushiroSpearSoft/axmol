@@ -49,6 +49,16 @@ elseif(WINDOWS)
     file(GLOB _AX_PLATFORM_SPECIFIC_SRC platform/winrt/*.cpp)
   endif()
 
+  list(APPEND _AX_PLATFORM_SPECIFIC_HEADER
+    platform/msw/ComPtr.h
+    platform/msw/DWriteTextRenderer.h
+    platform/msw/Device-msw.cpp
+  )
+
+  list(APPEND _AX_PLATFORM_SPECIFIC_SRC
+    platform/msw/DWriteTextRenderer.cpp
+  )
+
 elseif(APPLE)
   set(_AX_PLATFORM_SPECIFIC_HEADER
     platform/apple/FileUtils-apple.h
@@ -175,6 +185,7 @@ set(_AX_PLATFORM_HEADER
   platform/StdC.h
   platform/IFileStream.h
   platform/FileStream.h
+  platform/CommandLineArgs.h
 )
 
 set(_AX_PLATFORM_SRC
@@ -185,4 +196,5 @@ set(_AX_PLATFORM_SRC
   platform/Image.cpp
   platform/FileStream.cpp
   platform/ApplicationBase.cpp
+  platform/CommandLineArgs.cpp
 )

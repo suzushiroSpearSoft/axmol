@@ -231,19 +231,19 @@ if(WASM)
 endif()
 
 # axmolver.h
-find_program(GIT_PROG NAMES git)
+find_program(GIT_EXECUTABLE NAMES git)
 
-if(AX_UPDATE_BUILD_VERSION AND GIT_PROG AND EXISTS "${_AX_ROOT}/.git")
+if(AX_UPDATE_BUILD_VERSION AND GIT_EXECUTABLE AND EXISTS "${_AX_ROOT}/.git")
   # Get the current working branch and its latest abbreviated commit hash
-  execute_process(COMMAND ${GIT_PROG} -C "${_AX_ROOT}" rev-list --count HEAD
+  execute_process(COMMAND ${GIT_EXECUTABLE} -C "${_AX_ROOT}" rev-list --count HEAD
     TIMEOUT 5
     OUTPUT_VARIABLE AX_BUILD_NUM
     OUTPUT_STRIP_TRAILING_WHITESPACE)
-  execute_process(COMMAND ${GIT_PROG} -C "${_AX_ROOT}" branch --show-current
+  execute_process(COMMAND ${GIT_EXECUTABLE} -C "${_AX_ROOT}" branch --show-current
     TIMEOUT 5
     OUTPUT_VARIABLE AX_GIT_BRANCH
     OUTPUT_STRIP_TRAILING_WHITESPACE)
-  execute_process(COMMAND ${GIT_PROG} -C "${_AX_ROOT}" rev-parse --short=7 HEAD
+  execute_process(COMMAND ${GIT_EXECUTABLE} -C "${_AX_ROOT}" rev-parse --short=7 HEAD
     TIMEOUT 5
     OUTPUT_VARIABLE AX_GIT_COMMIT_HASH
     OUTPUT_STRIP_TRAILING_WHITESPACE)
@@ -272,15 +272,9 @@ if(AX_ENABLE_3D)
 endif()
 
 include(platform/CMakeLists.txt)
-
-if(AX_ENABLE_PHYSICS_2D)
-  include(2d/physics/CMakeLists.txt)
+if(AX_ENABLE_PHYSICS_2D OR AX_ENABLE_PHYSICS_3D)
+    include(physics/CMakeLists.txt)
 endif()
-
-if(AX_ENABLE_PHYSICS_3D)
-  include(3d/physics/CMakeLists.txt)
-endif()
-
 include(math/CMakeLists.txt)
 
 if(AX_ENABLE_NAVMESH)
@@ -311,7 +305,7 @@ endif()
 if(AX_ENABLE_VR)
     include(vr/CMakeLists.txt)
     if (APPLE)
-        set_source_files_properties(vr/VRGenericHeadTracker.cpp PROPERTIES LANGUAGE OBJCXX)
+      set_source_files_properties(vr/VRGenericHeadTracker.cpp PROPERTIES LANGUAGE OBJCXX)
     endif()
 endif()
 
@@ -345,14 +339,9 @@ if(AX_ENABLE_3D)
   list(APPEND _AX_SRC ${_AX_3D_SRC})
 endif()
 
-if(AX_ENABLE_PHYSICS_2D)
+if(AX_ENABLE_PHYSICS_2D OR AX_ENABLE_PHYSICS_3D)
   list(APPEND _AX_HEADER ${_AX_PHYSICS_HEADER})
   list(APPEND _AX_SRC ${_AX_PHYSICS_SRC})
-endif()
-
-if(AX_ENABLE_PHYSICS_3D)
-  list(APPEND _AX_HEADER ${_AX_PHYSICS3D_HEADER})
-  list(APPEND _AX_SRC ${_AX_PHYSICS3D_SRC})
 endif()
 
 if(AX_ENABLE_NAVMESH)

@@ -40,6 +40,8 @@ THE SOFTWARE.
 #pragma comment(lib, "Shlwapi.lib")
 
 #include "ntcvt/ntcvt.hpp"
+#include <combaseapi.h>
+
 /**
 @brief    This function change the PVRFrame show/hide setting in register.
 @param  bEnable If true show the PVRFrame window, otherwise hide.
@@ -70,6 +72,12 @@ Application::~Application()
 
 int Application::run()
 {
+    // On Win32 builds, the axmol rendering thread also serves as the program main thread.
+    // It owns the native render window (HWND) and runs the message loop.
+    // This thread should be initialized as STA (COINIT_APARTMENTTHREADED) to support
+    // both the window message loop and COM-based UI components such as WebView2.
+    std::ignore = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+
     PVRFrameEnableControlWindow(false);
 
     {

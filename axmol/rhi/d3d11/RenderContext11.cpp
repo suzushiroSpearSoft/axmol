@@ -38,12 +38,7 @@
 #include "axmol/platform/Application.h"
 
 #if AX_TARGET_PLATFORM == AX_PLATFORM_WINRT
-#    include <windows.ui.xaml.media.dxinterop.h>
-#    include <windows.ui.xaml.controls.h>
-#    include <windows.ui.core.h>
-#    include <windows.foundation.h>
-#    include <wrl/event.h>
-#    include <wrl/implements.h>
+#    include "axmol/platform/winrt/SwapChainPanelUtil.h"
 #endif
 
 namespace ax::rhi::d3d11
@@ -103,96 +98,6 @@ static BOOL _axmolIsWindowsVersionOrGreaterWin32(WORD major, WORD minor, WORD bu
 
 #    define axmolIsWindows10OrGreater() \
         _axmolIsWindowsVersionOrGreaterWin32(HIBYTE(_WIN32_WINNT_WIN10), LOBYTE(_WIN32_WINNT_WIN10), 0)
-#elif AX_TARGET_PLATFORM == AX_PLATFORM_WINRT
-
-using ICoreDispatcher    = ABI::Windows::UI::Core::ICoreDispatcher;
-using IDispatchedHandler = ABI::Windows::UI::Core::IDispatchedHandler;
-using IAsyncAction       = ABI::Windows::Foundation::IAsyncAction;
-using ISwapChainPanel    = ABI::Windows::UI::Xaml::Controls::ISwapChainPanel;
-using IDependencyObject  = ABI::Windows::UI::Xaml::IDependencyObject;
-using IUIElement         = ABI::Windows::UI::Xaml::IUIElement;
-
-// Creates a COM/WinRT callback object for the specified interface type (_Ty)
-// that is implemented with Free‑Threaded Marshaler (FtmBase) support.
-//
-// This helper wraps Microsoft::WRL::Callback with an Implements<> type that
-// includes FtmBase, making the resulting object agile across threads.
-// This is especially useful when passing the handler to APIs like
-// ICoreDispatcher::RunAsync, which may invoke the callback on a different thread.
-//
-// Template parameters:
-//   _Ty  - The COM/WinRT interface type to implement (e.g. ABI::Windows::UI::Core::IDispatchedHandler)
-//   _Fty - The callable type (lambda, functor, etc.) providing the implementation
-//
-// Parameters:
-//   func - A callable object implementing the interface's Invoke method
-//
-// Returns:
-//   A Microsoft::WRL::ComPtr-compatible callback object implementing _Ty with FTM support.
-template <typename _Ty, typename _Fty>
-static auto makeFtmHandler(_Fty&& func)
-{
-    using Impl = Microsoft::WRL::Implements<Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom>, _Ty,
-                                            Microsoft::WRL::FtmBase>;
-    return Microsoft::WRL::Callback<Impl>(std::forward<_Fty>(func));
-}
-
-template <typename _Fty>
-static HRESULT runOnUIThread(const ComPtr<ICoreDispatcher>& dispatcher, _Fty&& func)
-{
-    using namespace ABI::Windows::UI::Core;
-
-    boolean hasThreadAccess = FALSE;
-    HRESULT hr              = dispatcher->get_HasThreadAccess(&hasThreadAccess);
-    if (FAILED(hr))
-        return hr;
-
-    if (hasThreadAccess)
-    {
-        return func();
-    }
-
-    struct AutoHandle
-    {
-        explicit AutoHandle(HANDLE h) : _h(h) {}
-        ~AutoHandle()
-        {
-            if (_h)
-                ::CloseHandle(_h);
-        }
-        HANDLE get() const { return _h; }
-        explicit operator bool() const { return _h != nullptr; }
-
-    private:
-        HANDLE _h;
-    };
-
-    AutoHandle waitEvent{::CreateEventExW(nullptr, nullptr, CREATE_EVENT_MANUAL_RESET, EVENT_ALL_ACCESS)};
-    if (!waitEvent)
-        return E_FAIL;
-
-    HRESULT hr2 = E_FAIL;
-
-    auto handler = makeFtmHandler<IDispatchedHandler>([&]() -> HRESULT {
-        hr2 = func();
-        ::SetEvent(waitEvent.get());
-        return S_OK;
-    });
-
-    ComPtr<IAsyncAction> asyncAction;
-    hr = dispatcher->RunAsync(CoreDispatcherPriority_Normal, handler.Get(), &asyncAction);
-    if (FAILED(hr))
-        return hr;
-
-    auto waitResult = ::WaitForSingleObjectEx(waitEvent.get(), 10 * 1000, TRUE);
-    if (waitResult != WAIT_OBJECT_0)
-    {
-        std::terminate();
-        return E_FAIL;
-    }
-
-    return hr2;
-}
 #endif
 
 RenderContextImpl::RenderContextImpl(DriverImpl* driver, SurfaceHandle surface)
@@ -274,41 +179,15 @@ RenderContextImpl::RenderContextImpl(DriverImpl* driver, SurfaceHandle surface)
             swapChain1.As(&swapChain);
         }
 #elif AX_TARGET_PLATFORM == AX_PLATFORM_WINUWP
-        // ISwapChainPanel
-        ComPtr<IUnknown> surfaceHold{static_cast<IUnknown*>(surface)};
-        ComPtr<ISwapChainPanel> swapChainPanel;
-        hr = surfaceHold.As(&swapChainPanel);
-        AX_BREAK_IF(FAILED(hr));
+        // Wrap the raw COM pointer into a C++/WinRT runtime class
+        winrt::SwapChainPanel swapChainPanel{nullptr};
+        winrt::copy_from_abi(swapChainPanel, surface.ptr);
 
-        // dispatcher
-        ComPtr<IDependencyObject> swapChainPanelDependencyObject;
-        hr = swapChainPanel.As(&swapChainPanelDependencyObject);
-        AX_BREAK_IF(FAILED(hr));
+        auto dispatcher = swapChainPanel.Dispatcher();
+        winrt::Size panelSize;
+        winrt::Vector2 renderScale;
 
-        ComPtr<ICoreDispatcher> dispatcher;
-        hr = swapChainPanelDependencyObject->get_Dispatcher(dispatcher.GetAddressOf());
-        AX_BREAK_IF(FAILED(hr));
-
-        // ISwapChainPanelNative
-        ComPtr<ISwapChainPanelNative> swapChainPanelNative;
-        hr = swapChainPanel.As(&swapChainPanelNative);
-        AX_BREAK_IF(FAILED(hr));
-
-        ABI::Windows::Foundation::Size panelSize;
-        ComPtr<IUIElement> uiElement;
-        hr = swapChainPanel.As(&uiElement);
-        AX_BREAK_IF(FAILED(hr));
-        Vec2 renderScale;
-        hr = runOnUIThread(dispatcher, [&panelSize, &renderScale, uiElement, swapChainPanel] {
-            HRESULT hr1 = uiElement->get_RenderSize(&panelSize);
-            if (FAILED(hr1))
-                return hr1;
-            hr1 = swapChainPanel->get_CompositionScaleX(&renderScale.x);
-            if (FAILED(hr1))
-                return hr1;
-            hr1 = swapChainPanel->get_CompositionScaleY(&renderScale.y);
-            return hr1;
-        });
+        hr = winrt::GetSwapChainPanelRenderMetrics(swapChainPanel, dispatcher, panelSize, renderScale);
         AX_BREAK_IF(FAILED(hr));
 
         // create swapchain
@@ -339,8 +218,10 @@ RenderContextImpl::RenderContextImpl(DriverImpl* driver, SurfaceHandle surface)
         AX_BREAK_IF(FAILED(hr));
         swapChain1.As(&swapChain);
 
-        hr = runOnUIThread(dispatcher, [swapChainPanelNative, swapChain1] {
-            return swapChainPanelNative->SetSwapChain(swapChain1.Get());
+        hr = winrt::RunOnUIThreadSync(dispatcher, [&swapChainPanel, swapChain1] {
+            auto hr0 = swapChainPanel.as<ISwapChainPanelNative>()->SetSwapChain(swapChain1.Get());
+            if (FAILED(hr0))
+                throw winrt::hresult_error(hr0);
         });
 
         AX_BREAK_IF(FAILED(hr));
@@ -431,9 +312,7 @@ RenderContextImpl::~RenderContextImpl()
     AX_SAFE_RELEASE_NULL(_renderPipeline);
 
     SafeRelease(_swapChain);
-
-    if (_rasterState)
-        _rasterState.Reset();
+    _rasterStateCache.clear();
 }
 
 bool RenderContextImpl::updateSurface(SurfaceHandle /*surface*/, uint32_t width, uint32_t height)
@@ -523,25 +402,12 @@ void RenderContextImpl::updatePipelineState(const RenderTarget* rt,
     _d3d11Context->IASetPrimitiveTopology(toD3DPrimitiveTopology(primitiveType));
 }
 
-void RenderContextImpl::setViewport(int x, int y, unsigned int w, unsigned int h)
-{
-    D3D11_VIEWPORT viewport = {};
-    viewport.TopLeftX       = static_cast<FLOAT>(x);
-    viewport.TopLeftY       = static_cast<FLOAT>(y);
-    viewport.Width          = static_cast<FLOAT>(w);
-    viewport.Height         = static_cast<FLOAT>(h);
-    viewport.MinDepth       = 0.0f;
-    viewport.MaxDepth       = 1.0f;
-
-    _driver->getContext()->RSSetViewports(1, &viewport);
-}
-
 void RenderContextImpl::setCullMode(CullMode mode)
 {
     if (_rasterDesc.cullMode != mode)
     {
         _rasterDesc.cullMode = mode;
-        _rasterDesc.dirtyFlags |= RF_CULL_MODE;
+        _dirtyStateFlags |= RenderStateFlag::RasterDesc;
     }
 }
 
@@ -550,15 +416,29 @@ void RenderContextImpl::setWinding(Winding winding)
     if (_rasterDesc.winding != winding)
     {
         _rasterDesc.winding = winding;
-        _rasterDesc.dirtyFlags |= RF_WINDING;
+        _dirtyStateFlags |= RenderStateFlag::RasterDesc;
     }
 }
 
-void RenderContextImpl::setScissorRect(bool isEnabled, float x, float y, float width, float height)
+void RenderContextImpl::setViewport(int x, int y, unsigned int w, unsigned int h)
+{
+    D3D11_VIEWPORT vp = {.MinDepth = 0.0f, .MaxDepth = 1.0f};
+    vp.TopLeftX       = static_cast<FLOAT>(x);
+    vp.TopLeftY       = static_cast<FLOAT>(y);
+    vp.Width          = static_cast<FLOAT>(w);
+    vp.Height         = static_cast<FLOAT>(h);
+    if (!dxutils::viewportsEqual(_viewport, vp))
+    {
+        _viewport = vp;
+        _dirtyStateFlags |= RenderStateFlag::Viewport;
+    }
+}
+
+void RenderContextImpl::setScissorRect(bool enabled, float x, float y, float width, float height)
 {
     D3D11_RECT rect{};
 
-    if (isEnabled)
+    if (enabled)
     {
         const float rtW = static_cast<float>(_renderTargetWidth);
         const float rtH = static_cast<float>(_renderTargetHeight);
@@ -587,43 +467,68 @@ void RenderContextImpl::setScissorRect(bool isEnabled, float x, float y, float w
         rect.bottom = _renderTargetHeight;
     }
 
-    if (_rasterDesc.scissorEnable != isEnabled)
+    if (_rasterDesc.scissorEnable != enabled)
     {
-        _rasterDesc.scissorEnable = isEnabled;
-        _rasterDesc.dirtyFlags |= RF_SCISSOR;
+        _rasterDesc.scissorEnable = enabled;
+        _dirtyStateFlags |= RenderStateFlag::RasterDesc;
     }
 
-    _d3d11Context->RSSetScissorRects(1, &rect);
+    if (!dxutils::rectsEqual(_scissorRect, rect))
+    {
+        _scissorRect = rect;
+        _dirtyStateFlags |= RenderStateFlag::ScissorRect;
+    }
 }
 
-void RenderContextImpl::updateRasterizerState()
+void RenderContextImpl::applyRenderStates()
 {
-    if (!_rasterDesc.dirtyFlags && _rasterState)
-        return;
-    D3D11_RASTERIZER_DESC desc = {};
-    desc.FillMode              = D3D11_FILL_SOLID;
-
-    switch (_rasterDesc.cullMode)
+    if (bitmask::any(RenderStateFlag::Viewport, _dirtyStateFlags))
     {
-    case CullMode::NONE:
-        desc.CullMode = D3D11_CULL_NONE;
-        break;
-    case CullMode::BACK:
-        desc.CullMode = D3D11_CULL_BACK;
-        break;
-    case CullMode::FRONT:
-        desc.CullMode = D3D11_CULL_FRONT;
-        break;
+        _d3d11Context->RSSetViewports(1, &_viewport);
+        _dirtyStateFlags &= ~RenderStateFlag::Viewport;
     }
 
-    desc.FrontCounterClockwise = (_rasterDesc.winding == Winding::COUNTER_CLOCK_WISE);
+    if (bitmask::any(RenderStateFlag::ScissorRect, _dirtyStateFlags))
+    {
+        _d3d11Context->RSSetScissorRects(1, &_scissorRect);
+        _dirtyStateFlags &= ~RenderStateFlag::ScissorRect;
+    }
 
-    desc.DepthClipEnable = TRUE;
-    desc.ScissorEnable   = _rasterDesc.scissorEnable ? TRUE : FALSE;
+    if (bitmask::any(RenderStateFlag::RasterDesc, _dirtyStateFlags))
+    {
+        const auto key = std::bit_cast<uint32_t>(_rasterDesc);
+        auto it        = _rasterStateCache.find(key);
+        if (it == _rasterStateCache.end()) [[unlikely]]
+        {
+            D3D11_RASTERIZER_DESC desc = {};
+            desc.FillMode              = D3D11_FILL_SOLID;
 
-    _AXASSERT_HR(_driver->getDevice()->CreateRasterizerState(&desc, _rasterState.ReleaseAndGetAddressOf()));
-    _d3d11Context->RSSetState(_rasterState.Get());
-    _rasterDesc.dirtyFlags = 0;
+            switch (_rasterDesc.cullMode)
+            {
+            case CullMode::NONE:
+                desc.CullMode = D3D11_CULL_NONE;
+                break;
+            case CullMode::BACK:
+                desc.CullMode = D3D11_CULL_BACK;
+                break;
+            case CullMode::FRONT:
+                desc.CullMode = D3D11_CULL_FRONT;
+                break;
+            }
+
+            desc.FrontCounterClockwise = (_rasterDesc.winding == Winding::COUNTER_CLOCK_WISE);
+
+            desc.DepthClipEnable = TRUE;
+            desc.ScissorEnable   = _rasterDesc.scissorEnable ? TRUE : FALSE;
+
+            ComPtr<ID3D11RasterizerState> state;
+            _AXASSERT_HR(_driver->getDevice()->CreateRasterizerState(&desc, state.GetAddressOf()));
+            it = _rasterStateCache.emplace(key, std::move(state)).first;
+        }
+
+        _d3d11Context->RSSetState(it->second.Get());
+        _dirtyStateFlags &= ~RenderStateFlag::RasterDesc;
+    }
 }
 
 void RenderContextImpl::setVertexBuffer(Buffer* buffer)
@@ -729,7 +634,7 @@ void RenderContextImpl::endRenderPass()
 void RenderContextImpl::prepareDrawing()
 {
     assert(_programState);
-    updateRasterizerState();
+    applyRenderStates();
 
     auto context = _driver->getContext();
 

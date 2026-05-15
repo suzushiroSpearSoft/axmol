@@ -34,6 +34,21 @@
 namespace ax
 {
 
+struct GlyphSize
+{
+    int width{0};
+    int height{0};
+};
+
+struct GlyphMetrics
+{
+    float bboxWidth{0};
+    float bboxHeight{0};
+    float horiBearingX{0};
+    float horiBearingY{0};
+    int xAdvance{0};
+};
+
 /**
  * @addtogroup _2d
  * @{
@@ -122,7 +137,7 @@ public:
     /**
      * create fallback font with font face info & mainFont
      */
-    static FontFreeType* createFallbackFont(const FontFaceInfo& faceInfo, FontFreeType* mainFont);
+    static FontFreeType* createFallbackFont(const GlyphResolution& glyphResolution, FontFreeType* mainFont);
 
     static void shutdownFreeType();
 
@@ -130,10 +145,10 @@ public:
 
     float getOutlineSize() const { return _outlineSize; }
 
-    void renderCharAt(unsigned char* dest,
+    void renderCharAt(uint8_t* dest,
                       int posX,
                       int posY,
-                      unsigned char* bitmap,
+                      uint8_t* bitmap,
                       int bitmapWidth,
                       int bitmapHeight,
                       int atlasWidth,
@@ -141,22 +156,18 @@ public:
 
     int* getHorizontalKerningForTextUTF32(const std::u32string& text, int& outNumLetters) const override;
 
-    unsigned char* getGlyphBitmap(char32_t charCode,
-                                  int& outWidth,
-                                  int& outHeight,
-                                  Rect& outRect,
-                                  int& xAdvance,
-                                  const GlyphResolution*& fallbackRes,
-                                  bool& sharedBitmapData,
-                                    bool isMono);
+    uint8_t* getGlyphBitmap(char32_t charCode,
+                            GlyphSize& glyphSize,
+                            GlyphMetrics& glyphMetrics,
+                            const GlyphResolution*& fallbackRes,
+                            bool& sharedBitmapData,
+                            bool isMono);
 
-    unsigned char* getGlyphBitmapByIndex(unsigned int glyphIndex,
-                                         int& outWidth,
-                                         int& outHeight,
-                                         Rect& outRect,
-                                         int& xAdvance,
-                                         bool& sharedBitmapData,
-                                        bool isMono);
+    uint8_t* getGlyphBitmapByIndex(unsigned int glyphIndex,
+                                   GlyphSize& glyphSize,
+                                   GlyphMetrics& glyphMetrics,
+                                   bool& sharedBitmapData,
+                                    bool isMono);
 
     int getFontAscender() const;
     const char* getFontFamily() const;
@@ -178,15 +189,15 @@ private:
     static bool _doNativeBytecodeHinting;
     static bool _globalSDFEnabled;
     static char32_t _mssingGlyphCharacter;
+    static IFontEngine* _fontEngine;
 
     static bool initFreeType();
 
-    FontFreeType(bool distanceFieldEnabled = false, float outline = 0);
+    FontFreeType(std::string_view fontName, int faceSize, bool distanceFieldEnabled = false, float outline = 0);
     virtual ~FontFreeType();
 
-    bool initWithFontPath(std::string_view fontPath, int faceSize);
-
-    bool initWithFontFace(FT_Face face, std::string_view fontPath, int faceSize);
+    bool init();
+    bool initWithFace(FT_Face face);
 
     int getHorizontalKerningForChars(uint64_t firstChar, uint64_t secondChar) const;
     unsigned char* getGlyphBitmapBufferWithOutline(unsigned int glyphIndex, FT_BBox& bbox);
@@ -194,19 +205,21 @@ private:
 
     void setGlyphCollection(GlyphCollection glyphs, std::string_view customGlyphs);
 
-    FT_Face _fontFace;
-    FT_Stream _fontStream;
-    FT_Stroker _stroker;
+    FT_Face _ftFace;
+    FT_Size _ftSize;
+    FT_Stroker _ftStroker;
+    FT_Stream _ftStream;
 
-    std::string _fontName;
+    std::string _fontName;  // font family or path
     int _faceSize;
     bool _distanceFieldEnabled;
+    bool _ownFontFace;
     float _outlineSize;
     int _ascender;
     int _descender;
     int _lineHeight;
     bool _isMono = true;
-
+    unsigned int _styleFlags{0};  // the freetype font style flags
     GlyphCollection _usedGlyphs;
     std::string _customGlyphs;
 };

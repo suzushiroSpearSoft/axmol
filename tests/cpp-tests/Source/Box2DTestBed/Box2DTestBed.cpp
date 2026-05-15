@@ -31,8 +31,9 @@
 
 #include "Box2DTestBed.h"
 #include "samples/sample.h"
-#include "samples/TaskScheduler.h"
 #include "axmol/platform/RenderView.h"
+
+#include "box2d/constants.h"
 
 using namespace ax;
 USING_NS_AX_EXT;
@@ -90,7 +91,10 @@ Box2DTestBedTests::Box2DTestBedTests()
 
     s_context.Load();
 
-    ImGuiPresenter::getInstance()->setViewResolution(s_context.camera.width, s_context.camera.height);
+#if defined(AX_PLATFORM_GLFW)
+    static_cast<RenderViewImpl*>(Director::getInstance()->getRenderView())
+        ->setWindowed(s_context.camera.width, s_context.camera.height);
+#endif
 
     SortTests();
 
@@ -320,7 +324,7 @@ void Box2DTestBed::renderSamples()
     m_sample->Step();
 
     /// BEGIN UpdateUI
-    int maxWorkers  = enki::GetNumHardwareThreads();
+    int maxWorkers  = B2_MAX_WORKERS;
     float menuWidth = 180.0f * Device::getPixelRatio();
     if (s_context.showUI)
     {

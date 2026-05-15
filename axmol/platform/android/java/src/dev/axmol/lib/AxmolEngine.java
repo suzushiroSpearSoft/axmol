@@ -139,11 +139,12 @@ public class AxmolEngine {
         });
     }
 
-    private static boolean sInited = false;
+    private static boolean sInitialized = false;
     public static void init(final AppCompatActivity activity) {
         sActivity = activity;
         AxmolEngine.sAxmolEngineListener = (AxmolEngineListener)activity;
-        if (!sInited) {
+
+        if (!sInitialized) {
 
             PackageManager pm = activity.getPackageManager();
             boolean isSupportLowLatency = pm.hasSystemFeature(PackageManager.FEATURE_AUDIO_LOW_LATENCY);
@@ -156,13 +157,11 @@ public class AxmolEngine {
             AxmolEngine.sAssetManager = activity.getAssets();
             AxmolEngine.nativeInit((Context)activity, AxmolEngine.sAssetManager);
 
-            AxmolMediaEngine.setContext(activity);
-
             BitmapHelper.setContext(activity);
 
             AxmolEngine.sVibrateService = (Vibrator)activity.getSystemService(Context.VIBRATOR_SERVICE);
 
-            sInited = true;
+            sInitialized = true;
         }
     }
 
@@ -218,6 +217,8 @@ public class AxmolEngine {
     public static AppCompatActivity getActivity() {
         return sActivity;
     }
+
+    public static Context getApplicationContext() { return sActivity != null ? sActivity.getApplicationContext() : null; }
 
     public static void addOnActivityResultListener(OnActivityResultListener listener) {
         onActivityResultListeners.add(listener);
@@ -634,8 +635,9 @@ public class AxmolEngine {
     public static int[] getSafeInsets() {
         final int[] safeInsets = new int[]{0, 0, 0, 0};
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            Window cocosWindow = sActivity.getWindow();
-            DisplayCutout displayCutout = cocosWindow.getDecorView().getRootWindowInsets().getDisplayCutout();
+            Window window = sActivity.getWindow();
+            WindowInsets rootWindowInsets = window.getDecorView().getRootWindowInsets();
+            DisplayCutout displayCutout = rootWindowInsets != null ? rootWindowInsets.getDisplayCutout() : null;
             // Judge whether it is cutouts (aka notch) screen phone by judge cutout equle to null
             if (displayCutout != null) {
                 List<Rect> rects = displayCutout.getBoundingRects();
@@ -661,9 +663,10 @@ public class AxmolEngine {
     public static int[] getDeviceCornerRadii() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             final int[] radii = new int[]{0, 0, 0, 0};
-            Window cocosWindow = sActivity.getWindow();
-            View view = cocosWindow.getDecorView();
+            Window window = sActivity.getWindow();
+            View view = window.getDecorView();
             WindowInsets insets = view.getRootWindowInsets();
+            if (insets == null) return radii;
             android.view.RoundedCorner topLeft = insets.getRoundedCorner(android.view.RoundedCorner.POSITION_TOP_LEFT);
             android.view.RoundedCorner topRight = insets.getRoundedCorner(android.view.RoundedCorner.POSITION_TOP_RIGHT);
             android.view.RoundedCorner bottomLeft = insets.getRoundedCorner(android.view.RoundedCorner.POSITION_BOTTOM_LEFT);

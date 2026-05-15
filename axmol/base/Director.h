@@ -28,6 +28,7 @@ THE SOFTWARE.
 ****************************************************************************/
 #pragma once
 
+#include <functional>
 #include <stack>
 #include <thread>
 #include <chrono>
@@ -38,7 +39,7 @@ THE SOFTWARE.
 #include "axmol/scene/Scene.h"
 #include "axmol/math/Math.h"
 #include "axmol/platform/RenderView.h"
-#if defined(AX_PLATFORM_PC)
+#if defined(AX_PLATFORM_GLFW)
 #    include "concurrentqueue/concurrentqueue.h"
 #endif
 #ifdef AX_ENABLE_CONSOLE
@@ -422,6 +423,23 @@ public:
      */
     JobSystem* getJobSystem() const { return _jobSystem; }
 
+    /**
+     * @brief Run work on the JobSystem and optionally post a completion callback to the Axmol thread.
+     *
+     * The task function runs on the JobSystem. After task returns, done is posted through Scheduler::runOnAxmolThread()
+     * and therefore runs later on the Axmol thread.
+     *
+     * @param task Function executed by the JobSystem.
+     * @param done Optional completion callback posted to the Axmol thread after task returns.
+     * @return A handle for the background job. The handle reaches a terminal state after task returns; it does not wait
+     *         for the posted done callback to run.
+     *
+     * @note This is the preferred high-level API for the common background-work-then-main-thread-callback pattern.
+     *       Use JobSystem::enqueue() directly for low-level jobs that do not need Director or Scheduler semantics.
+     * @since axmol-3.0.0
+     */
+    JobHandle runAsync(std::function<void()> task, std::function<void()> done = nullptr);
+
     /** Gets the Scheduler associated with this director.
      * @since v2.0
      */
@@ -546,7 +564,7 @@ protected:
      */
     void setCanvasSize(const Vec2& canvasSize);
 
-#if defined(AX_PLATFORM_PC)
+#if defined(AX_PLATFORM_GLFW)
     void processOperations();
 #endif
 
@@ -692,7 +710,7 @@ protected:
     /* axmol thread id */
     std::thread::id _axmol_thread_id;
 
-#if defined(AX_PLATFORM_PC)
+#if defined(AX_PLATFORM_GLFW)
     /* axmol priority operations in render thread for PC platforms */
     moodycamel::ConcurrentQueue<std::function<void()>> _operations;
 #endif

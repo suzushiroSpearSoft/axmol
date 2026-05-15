@@ -37,16 +37,16 @@ class PhysicsDemo : public TestCase
 {
 public:
     PhysicsDemo();
-    virtual ~PhysicsDemo();
+    ~PhysicsDemo() override;
 
-    virtual bool init() override;
-    virtual void onEnter() override;
+    bool init() override;
+    void onEnter() override;
 
-    virtual std::string title() const override;
+    std::string title() const override;
 
     void toggleDebugCallback(ax::Object* sender);
 
-    ax::Sprite* addGrossiniAtPosition(ax::Vec2 p, float scale = 1.0);
+    ax::Sprite* addGrossiniAtPosition(ax::Vec2 p, float scale = 1.0, bool allowDrag = true);
     ax::Sprite* makeBall(ax::Vec2 point,
                          float radius,
                          const ax::PhysicsMaterial2D& material = ax::PHYSICS_MATERIAL_2D_DEFAULT);
@@ -90,9 +90,9 @@ class PhysicsDemoClickAdd : public PhysicsDemo
 public:
     CREATE_FUNC(PhysicsDemoClickAdd);
 
-    virtual ~PhysicsDemoClickAdd();
+    ~PhysicsDemoClickAdd() override;
     void onEnter() override;
-    virtual std::string subtitle() const override;
+    std::string subtitle() const override;
 
     void onTouchesEnded(const std::vector<ax::Touch*>& touches, ax::Event* event);
     void onAcceleration(ax::Acceleration* acc, ax::Event* event);
@@ -105,7 +105,7 @@ public:
 
     void onEnter() override;
     void updateOnce(float delta);
-    virtual std::string title() const override;
+    std::string title() const override;
 };
 
 class PhysicsDemoRayCast : public PhysicsDemo
@@ -116,7 +116,7 @@ public:
     PhysicsDemoRayCast();
 
     void onEnter() override;
-    virtual std::string title() const override;
+    std::string title() const override;
     void update(float delta) override;
     void onTouchesEnded(const std::vector<ax::Touch*>& touches, ax::Event* event);
 
@@ -175,8 +175,8 @@ public:
     void onEnter() override;
     virtual std::string title() const override;
 
-    bool onPreSolve(ax::Contact2D* contact);
-    void onCollisionHit(ax::Contact2D* contact);
+    bool onPreSolve(const ax::ContactInfo2D& info);
+    void onCollisionHit(ax::ContactEvent2D* contact);
 };
 
 class PhysicsDemoSlice : public PhysicsDemo
@@ -204,8 +204,8 @@ public:
     CREATE_FUNC(PhysicsDemoBug3988);
 
     void onEnter() override;
-    virtual std::string title() const override;
-    virtual std::string subtitle() const override;
+    std::string title() const override;
+    std::string subtitle() const override;
 };
 
 class PhysicsContactTest : public PhysicsDemo
@@ -215,9 +215,9 @@ public:
 
     void onEnter() override;
     void resetTest();
-    bool onPreSolve(ax::Contact2D* contact);
-    virtual std::string title() const override;
-    virtual std::string subtitle() const override;
+    bool onPreSolve(const ax::ContactInfo2D& info);
+    std::string title() const override;
+    std::string subtitle() const override;
 
     void onDecrease(ax::Object* sender);
     void onIncrease(ax::Object* sender);
@@ -235,7 +235,7 @@ public:
     CREATE_FUNC(PhysicsPositionRotationTest);
 
     void onEnter() override;
-    virtual std::string title() const override;
+    std::string title() const override;
 };
 
 class PhysicsSetGravityEnableTest : public PhysicsDemo
@@ -245,8 +245,8 @@ public:
 
     void onEnter() override;
     void onScheduleOnce(float delta);
-    virtual std::string title() const override;
-    virtual std::string subtitle() const override;
+    std::string title() const override;
+    std::string subtitle() const override;
 };
 
 class PhysicsDemoBug5482 : public PhysicsDemo
@@ -256,8 +256,8 @@ public:
 
     void onEnter() override;
     void onExit() override;
-    virtual std::string title() const override;
-    virtual std::string subtitle() const override;
+    std::string title() const override;
+    std::string subtitle() const override;
 
     void changeBodyCallback(ax::Object* sender);
 
@@ -276,9 +276,8 @@ public:
     void onEnter() override;
     void updateStart(float delta);
     void addBall();
-    virtual void update(float delta) override;
-    virtual std::string title() const override;
-    virtual std::string subtitle() const override;
+    std::string title() const override;
+    std::string subtitle() const override;
 };
 
 class PhysicsTransformTest : public PhysicsDemo
@@ -302,8 +301,8 @@ public:
     CREATE_FUNC(PhysicsIssue9959);
 
     void onEnter() override;
-    virtual std::string title() const override;
-    virtual std::string subtitle() const override;
+    std::string title() const override;
+    std::string subtitle() const override;
 };
 
 class PhysicsIssue15932 : public PhysicsDemo
@@ -312,8 +311,8 @@ public:
     CREATE_FUNC(PhysicsIssue15932);
 
     void onEnter() override;
-    virtual std::string title() const override;
-    virtual std::string subtitle() const override;
+    std::string title() const override;
+    std::string subtitle() const override;
 };
 
 class PhysicsDemoPyramidStackFixedUpdate : public PhysicsDemo
@@ -322,9 +321,9 @@ public:
     CREATE_FUNC(PhysicsDemoPyramidStackFixedUpdate);
 
     void onEnter() override;
-    virtual std::string title() const override;
+    std::string title() const override;
 
-    virtual void fixedUpdate(float delta) override;
+    void fixedUpdate(float delta) override;
 
 private:
     bool _isAddBall;

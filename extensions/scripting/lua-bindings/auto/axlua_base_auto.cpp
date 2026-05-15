@@ -22568,7 +22568,7 @@ int lua_ax_base_Scene_setCameraOrderDirty(lua_State* tolua_S)
 
     return 0;
 }
-int lua_ax_base_Scene_onProjectionChanged(lua_State* tolua_S)
+int lua_ax_base_Scene_setDebugCamera(lua_State* tolua_S)
 {
     int argc = 0;
     ax::Scene* obj = nullptr;
@@ -22588,7 +22588,7 @@ int lua_ax_base_Scene_onProjectionChanged(lua_State* tolua_S)
 #if _AX_DEBUG >= 1
     if (!obj)
     {
-        tolua_error(tolua_S,"invalid 'obj' in function 'lua_ax_base_Scene_onProjectionChanged'", nullptr);
+        tolua_error(tolua_S,"invalid 'obj' in function 'lua_ax_base_Scene_setDebugCamera'", nullptr);
         return 0;
     }
 #endif
@@ -22596,24 +22596,368 @@ int lua_ax_base_Scene_onProjectionChanged(lua_State* tolua_S)
     argc = lua_gettop(tolua_S)-1;
     if (argc == 1)
     {
-        ax::EventCustom* arg0;
+        ax::Camera* arg0;
 
-        ok &= luaval_to_object<ax::EventCustom>(tolua_S, 2, "ax.EventCustom",&arg0, "ax.Scene:onProjectionChanged");
+        ok &= luaval_to_object<ax::Camera>(tolua_S, 2, "ax.Camera",&arg0, "ax.Scene:setDebugCamera");
         if(!ok)
         {
-            tolua_error(tolua_S,"invalid arguments in function 'lua_ax_base_Scene_onProjectionChanged'", nullptr);
+            tolua_error(tolua_S,"invalid arguments in function 'lua_ax_base_Scene_setDebugCamera'", nullptr);
             return 0;
         }
-        obj->onProjectionChanged(arg0);
+        obj->setDebugCamera(arg0);
         lua_settop(tolua_S, 1);
         return 1;
     }
-    luaL_error(tolua_S, "%s has wrong number of arguments: %d, was expecting %d \n", "ax.Scene:onProjectionChanged",argc, 1);
+    luaL_error(tolua_S, "%s has wrong number of arguments: %d, was expecting %d \n", "ax.Scene:setDebugCamera",argc, 1);
     return 0;
 
 #if _AX_DEBUG >= 1
     tolua_lerror:
-    tolua_error(tolua_S,"#ferror in function 'lua_ax_base_Scene_onProjectionChanged'.",&tolua_err);
+    tolua_error(tolua_S,"#ferror in function 'lua_ax_base_Scene_setDebugCamera'.",&tolua_err);
+#endif
+
+    return 0;
+}
+int lua_ax_base_Scene_setFixedDeltaTime(lua_State* tolua_S)
+{
+    int argc = 0;
+    ax::Scene* obj = nullptr;
+    bool ok  = true;
+
+#if _AX_DEBUG >= 1
+    tolua_Error tolua_err;
+#endif
+
+
+#if _AX_DEBUG >= 1
+    if (!tolua_isusertype(tolua_S,1,"ax.Scene",0,&tolua_err)) goto tolua_lerror;
+#endif
+
+    obj = (ax::Scene*)tolua_tousertype(tolua_S,1,0);
+
+#if _AX_DEBUG >= 1
+    if (!obj)
+    {
+        tolua_error(tolua_S,"invalid 'obj' in function 'lua_ax_base_Scene_setFixedDeltaTime'", nullptr);
+        return 0;
+    }
+#endif
+
+    argc = lua_gettop(tolua_S)-1;
+    if (argc == 1)
+    {
+        double arg0;
+
+        ok &= luaval_to_number(tolua_S, 2, &arg0, "ax.Scene:setFixedDeltaTime");
+        if(!ok)
+        {
+            tolua_error(tolua_S,"invalid arguments in function 'lua_ax_base_Scene_setFixedDeltaTime'", nullptr);
+            return 0;
+        }
+        obj->setFixedDeltaTime(arg0);
+        lua_settop(tolua_S, 1);
+        return 1;
+    }
+    luaL_error(tolua_S, "%s has wrong number of arguments: %d, was expecting %d \n", "ax.Scene:setFixedDeltaTime",argc, 1);
+    return 0;
+
+#if _AX_DEBUG >= 1
+    tolua_lerror:
+    tolua_error(tolua_S,"#ferror in function 'lua_ax_base_Scene_setFixedDeltaTime'.",&tolua_err);
+#endif
+
+    return 0;
+}
+int lua_ax_base_Scene_setMaxDeltaTime(lua_State* tolua_S)
+{
+    int argc = 0;
+    ax::Scene* obj = nullptr;
+    bool ok  = true;
+
+#if _AX_DEBUG >= 1
+    tolua_Error tolua_err;
+#endif
+
+
+#if _AX_DEBUG >= 1
+    if (!tolua_isusertype(tolua_S,1,"ax.Scene",0,&tolua_err)) goto tolua_lerror;
+#endif
+
+    obj = (ax::Scene*)tolua_tousertype(tolua_S,1,0);
+
+#if _AX_DEBUG >= 1
+    if (!obj)
+    {
+        tolua_error(tolua_S,"invalid 'obj' in function 'lua_ax_base_Scene_setMaxDeltaTime'", nullptr);
+        return 0;
+    }
+#endif
+
+    argc = lua_gettop(tolua_S)-1;
+    if (argc == 1)
+    {
+        double arg0;
+
+        ok &= luaval_to_number(tolua_S, 2, &arg0, "ax.Scene:setMaxDeltaTime");
+        if(!ok)
+        {
+            tolua_error(tolua_S,"invalid arguments in function 'lua_ax_base_Scene_setMaxDeltaTime'", nullptr);
+            return 0;
+        }
+        obj->setMaxDeltaTime(arg0);
+        lua_settop(tolua_S, 1);
+        return 1;
+    }
+    luaL_error(tolua_S, "%s has wrong number of arguments: %d, was expecting %d \n", "ax.Scene:setMaxDeltaTime",argc, 1);
+    return 0;
+
+#if _AX_DEBUG >= 1
+    tolua_lerror:
+    tolua_error(tolua_S,"#ferror in function 'lua_ax_base_Scene_setMaxDeltaTime'.",&tolua_err);
+#endif
+
+    return 0;
+}
+int lua_ax_base_Scene_setMaxFixedStepsPerFrame(lua_State* tolua_S)
+{
+    int argc = 0;
+    ax::Scene* obj = nullptr;
+    bool ok  = true;
+
+#if _AX_DEBUG >= 1
+    tolua_Error tolua_err;
+#endif
+
+
+#if _AX_DEBUG >= 1
+    if (!tolua_isusertype(tolua_S,1,"ax.Scene",0,&tolua_err)) goto tolua_lerror;
+#endif
+
+    obj = (ax::Scene*)tolua_tousertype(tolua_S,1,0);
+
+#if _AX_DEBUG >= 1
+    if (!obj)
+    {
+        tolua_error(tolua_S,"invalid 'obj' in function 'lua_ax_base_Scene_setMaxFixedStepsPerFrame'", nullptr);
+        return 0;
+    }
+#endif
+
+    argc = lua_gettop(tolua_S)-1;
+    if (argc == 1)
+    {
+        int arg0;
+
+        ok &= luaval_to_int(tolua_S, 2, &arg0, "ax.Scene:setMaxFixedStepsPerFrame");
+        if(!ok)
+        {
+            tolua_error(tolua_S,"invalid arguments in function 'lua_ax_base_Scene_setMaxFixedStepsPerFrame'", nullptr);
+            return 0;
+        }
+        obj->setMaxFixedStepsPerFrame(arg0);
+        lua_settop(tolua_S, 1);
+        return 1;
+    }
+    luaL_error(tolua_S, "%s has wrong number of arguments: %d, was expecting %d \n", "ax.Scene:setMaxFixedStepsPerFrame",argc, 1);
+    return 0;
+
+#if _AX_DEBUG >= 1
+    tolua_lerror:
+    tolua_error(tolua_S,"#ferror in function 'lua_ax_base_Scene_setMaxFixedStepsPerFrame'.",&tolua_err);
+#endif
+
+    return 0;
+}
+int lua_ax_base_Scene_setTimeScale(lua_State* tolua_S)
+{
+    int argc = 0;
+    ax::Scene* obj = nullptr;
+    bool ok  = true;
+
+#if _AX_DEBUG >= 1
+    tolua_Error tolua_err;
+#endif
+
+
+#if _AX_DEBUG >= 1
+    if (!tolua_isusertype(tolua_S,1,"ax.Scene",0,&tolua_err)) goto tolua_lerror;
+#endif
+
+    obj = (ax::Scene*)tolua_tousertype(tolua_S,1,0);
+
+#if _AX_DEBUG >= 1
+    if (!obj)
+    {
+        tolua_error(tolua_S,"invalid 'obj' in function 'lua_ax_base_Scene_setTimeScale'", nullptr);
+        return 0;
+    }
+#endif
+
+    argc = lua_gettop(tolua_S)-1;
+    if (argc == 1)
+    {
+        double arg0;
+
+        ok &= luaval_to_number(tolua_S, 2, &arg0, "ax.Scene:setTimeScale");
+        if(!ok)
+        {
+            tolua_error(tolua_S,"invalid arguments in function 'lua_ax_base_Scene_setTimeScale'", nullptr);
+            return 0;
+        }
+        obj->setTimeScale(arg0);
+        lua_settop(tolua_S, 1);
+        return 1;
+    }
+    luaL_error(tolua_S, "%s has wrong number of arguments: %d, was expecting %d \n", "ax.Scene:setTimeScale",argc, 1);
+    return 0;
+
+#if _AX_DEBUG >= 1
+    tolua_lerror:
+    tolua_error(tolua_S,"#ferror in function 'lua_ax_base_Scene_setTimeScale'.",&tolua_err);
+#endif
+
+    return 0;
+}
+int lua_ax_base_Scene_setFixedUpdateEnabled(lua_State* tolua_S)
+{
+    int argc = 0;
+    ax::Scene* obj = nullptr;
+    bool ok  = true;
+
+#if _AX_DEBUG >= 1
+    tolua_Error tolua_err;
+#endif
+
+
+#if _AX_DEBUG >= 1
+    if (!tolua_isusertype(tolua_S,1,"ax.Scene",0,&tolua_err)) goto tolua_lerror;
+#endif
+
+    obj = (ax::Scene*)tolua_tousertype(tolua_S,1,0);
+
+#if _AX_DEBUG >= 1
+    if (!obj)
+    {
+        tolua_error(tolua_S,"invalid 'obj' in function 'lua_ax_base_Scene_setFixedUpdateEnabled'", nullptr);
+        return 0;
+    }
+#endif
+
+    argc = lua_gettop(tolua_S)-1;
+    if (argc == 1)
+    {
+        bool arg0;
+
+        ok &= luaval_to_boolean(tolua_S, 2, &arg0, "ax.Scene:setFixedUpdateEnabled");
+        if(!ok)
+        {
+            tolua_error(tolua_S,"invalid arguments in function 'lua_ax_base_Scene_setFixedUpdateEnabled'", nullptr);
+            return 0;
+        }
+        obj->setFixedUpdateEnabled(arg0);
+        lua_settop(tolua_S, 1);
+        return 1;
+    }
+    luaL_error(tolua_S, "%s has wrong number of arguments: %d, was expecting %d \n", "ax.Scene:setFixedUpdateEnabled",argc, 1);
+    return 0;
+
+#if _AX_DEBUG >= 1
+    tolua_lerror:
+    tolua_error(tolua_S,"#ferror in function 'lua_ax_base_Scene_setFixedUpdateEnabled'.",&tolua_err);
+#endif
+
+    return 0;
+}
+int lua_ax_base_Scene_isFixedUpdateEnabled(lua_State* tolua_S)
+{
+    int argc = 0;
+    ax::Scene* obj = nullptr;
+    bool ok  = true;
+
+#if _AX_DEBUG >= 1
+    tolua_Error tolua_err;
+#endif
+
+
+#if _AX_DEBUG >= 1
+    if (!tolua_isusertype(tolua_S,1,"ax.Scene",0,&tolua_err)) goto tolua_lerror;
+#endif
+
+    obj = (ax::Scene*)tolua_tousertype(tolua_S,1,0);
+
+#if _AX_DEBUG >= 1
+    if (!obj)
+    {
+        tolua_error(tolua_S,"invalid 'obj' in function 'lua_ax_base_Scene_isFixedUpdateEnabled'", nullptr);
+        return 0;
+    }
+#endif
+
+    argc = lua_gettop(tolua_S)-1;
+    if (argc == 0)
+    {
+        if(!ok)
+        {
+            tolua_error(tolua_S,"invalid arguments in function 'lua_ax_base_Scene_isFixedUpdateEnabled'", nullptr);
+            return 0;
+        }
+        auto&& ret = obj->isFixedUpdateEnabled();
+        tolua_pushboolean(tolua_S,(bool)ret);
+        return 1;
+    }
+    luaL_error(tolua_S, "%s has wrong number of arguments: %d, was expecting %d \n", "ax.Scene:isFixedUpdateEnabled",argc, 0);
+    return 0;
+
+#if _AX_DEBUG >= 1
+    tolua_lerror:
+    tolua_error(tolua_S,"#ferror in function 'lua_ax_base_Scene_isFixedUpdateEnabled'.",&tolua_err);
+#endif
+
+    return 0;
+}
+int lua_ax_base_Scene_getPhysicsInterpolationAlpha(lua_State* tolua_S)
+{
+    int argc = 0;
+    ax::Scene* obj = nullptr;
+    bool ok  = true;
+
+#if _AX_DEBUG >= 1
+    tolua_Error tolua_err;
+#endif
+
+
+#if _AX_DEBUG >= 1
+    if (!tolua_isusertype(tolua_S,1,"ax.Scene",0,&tolua_err)) goto tolua_lerror;
+#endif
+
+    obj = (ax::Scene*)tolua_tousertype(tolua_S,1,0);
+
+#if _AX_DEBUG >= 1
+    if (!obj)
+    {
+        tolua_error(tolua_S,"invalid 'obj' in function 'lua_ax_base_Scene_getPhysicsInterpolationAlpha'", nullptr);
+        return 0;
+    }
+#endif
+
+    argc = lua_gettop(tolua_S)-1;
+    if (argc == 0)
+    {
+        if(!ok)
+        {
+            tolua_error(tolua_S,"invalid arguments in function 'lua_ax_base_Scene_getPhysicsInterpolationAlpha'", nullptr);
+            return 0;
+        }
+        auto&& ret = obj->getPhysicsInterpolationAlpha();
+        tolua_pushnumber(tolua_S,(lua_Number)ret);
+        return 1;
+    }
+    luaL_error(tolua_S, "%s has wrong number of arguments: %d, was expecting %d \n", "ax.Scene:getPhysicsInterpolationAlpha",argc, 0);
+    return 0;
+
+#if _AX_DEBUG >= 1
+    tolua_lerror:
+    tolua_error(tolua_S,"#ferror in function 'lua_ax_base_Scene_getPhysicsInterpolationAlpha'.",&tolua_err);
 #endif
 
     return 0;
@@ -22755,6 +23099,56 @@ int lua_ax_base_Scene_initPhysicsWorld(lua_State* tolua_S)
 #if _AX_DEBUG >= 1
     tolua_lerror:
     tolua_error(tolua_S,"#ferror in function 'lua_ax_base_Scene_initPhysicsWorld'.",&tolua_err);
+#endif
+
+    return 0;
+}
+int lua_ax_base_Scene_tick(lua_State* tolua_S)
+{
+    int argc = 0;
+    ax::Scene* obj = nullptr;
+    bool ok  = true;
+
+#if _AX_DEBUG >= 1
+    tolua_Error tolua_err;
+#endif
+
+
+#if _AX_DEBUG >= 1
+    if (!tolua_isusertype(tolua_S,1,"ax.Scene",0,&tolua_err)) goto tolua_lerror;
+#endif
+
+    obj = (ax::Scene*)tolua_tousertype(tolua_S,1,0);
+
+#if _AX_DEBUG >= 1
+    if (!obj)
+    {
+        tolua_error(tolua_S,"invalid 'obj' in function 'lua_ax_base_Scene_tick'", nullptr);
+        return 0;
+    }
+#endif
+
+    argc = lua_gettop(tolua_S)-1;
+    if (argc == 1)
+    {
+        double arg0;
+
+        ok &= luaval_to_number(tolua_S, 2, &arg0, "ax.Scene:tick");
+        if(!ok)
+        {
+            tolua_error(tolua_S,"invalid arguments in function 'lua_ax_base_Scene_tick'", nullptr);
+            return 0;
+        }
+        obj->tick(arg0);
+        lua_settop(tolua_S, 1);
+        return 1;
+    }
+    luaL_error(tolua_S, "%s has wrong number of arguments: %d, was expecting %d \n", "ax.Scene:tick",argc, 1);
+    return 0;
+
+#if _AX_DEBUG >= 1
+    tolua_lerror:
+    tolua_error(tolua_S,"#ferror in function 'lua_ax_base_Scene_tick'.",&tolua_err);
 #endif
 
     return 0;
@@ -23017,10 +23411,18 @@ int lua_register_ax_base_Scene(lua_State* tolua_S)
         tolua_function(tolua_S,"render",lua_ax_base_Scene_render);
         tolua_function(tolua_S,"initWithSize",lua_ax_base_Scene_initWithSize);
         tolua_function(tolua_S,"setCameraOrderDirty",lua_ax_base_Scene_setCameraOrderDirty);
-        tolua_function(tolua_S,"onProjectionChanged",lua_ax_base_Scene_onProjectionChanged);
+        tolua_function(tolua_S,"setDebugCamera",lua_ax_base_Scene_setDebugCamera);
+        tolua_function(tolua_S,"setFixedDeltaTime",lua_ax_base_Scene_setFixedDeltaTime);
+        tolua_function(tolua_S,"setMaxDeltaTime",lua_ax_base_Scene_setMaxDeltaTime);
+        tolua_function(tolua_S,"setMaxFixedStepsPerFrame",lua_ax_base_Scene_setMaxFixedStepsPerFrame);
+        tolua_function(tolua_S,"setTimeScale",lua_ax_base_Scene_setTimeScale);
+        tolua_function(tolua_S,"setFixedUpdateEnabled",lua_ax_base_Scene_setFixedUpdateEnabled);
+        tolua_function(tolua_S,"isFixedUpdateEnabled",lua_ax_base_Scene_isFixedUpdateEnabled);
+        tolua_function(tolua_S,"getPhysicsInterpolationAlpha",lua_ax_base_Scene_getPhysicsInterpolationAlpha);
         tolua_function(tolua_S,"getPhysicsWorld2D",lua_ax_base_Scene_getPhysicsWorld2D);
         tolua_function(tolua_S,"initWithPhysics",lua_ax_base_Scene_initWithPhysics);
         tolua_function(tolua_S,"initPhysicsWorld",lua_ax_base_Scene_initPhysicsWorld);
+        tolua_function(tolua_S,"tick",lua_ax_base_Scene_tick);
         tolua_function(tolua_S,"fixedUpdate",lua_ax_base_Scene_fixedUpdate);
         tolua_function(tolua_S,"stepPhysicsAndNavigation",lua_ax_base_Scene_stepPhysicsAndNavigation);
         tolua_function(tolua_S,"create", lua_ax_base_Scene_create);
@@ -33188,6 +33590,79 @@ int lua_ax_base_FileUtils_isDirectoryExistInternal(lua_State* tolua_S)
 
     return 0;
 }
+int lua_ax_base_FileUtils_copyFile(lua_State* tolua_S)
+{
+    int argc = 0;
+    ax::FileUtils* obj = nullptr;
+    bool ok  = true;
+
+#if _AX_DEBUG >= 1
+    tolua_Error tolua_err;
+#endif
+
+
+#if _AX_DEBUG >= 1
+    if (!tolua_isusertype(tolua_S,1,"ax.FileUtils",0,&tolua_err)) goto tolua_lerror;
+#endif
+
+    obj = (ax::FileUtils*)tolua_tousertype(tolua_S,1,0);
+
+#if _AX_DEBUG >= 1
+    if (!obj)
+    {
+        tolua_error(tolua_S,"invalid 'obj' in function 'lua_ax_base_FileUtils_copyFile'", nullptr);
+        return 0;
+    }
+#endif
+
+    argc = lua_gettop(tolua_S)-1;
+    if (argc == 2)
+    {
+        std::string_view arg0;
+        std::string_view arg1;
+
+        ok &= luaval_to_std_string_view(tolua_S, 2,&arg0, "ax.FileUtils:copyFile");
+
+        ok &= luaval_to_std_string_view(tolua_S, 3,&arg1, "ax.FileUtils:copyFile");
+        if(!ok)
+        {
+            tolua_error(tolua_S,"invalid arguments in function 'lua_ax_base_FileUtils_copyFile'", nullptr);
+            return 0;
+        }
+        auto&& ret = obj->copyFile(arg0, arg1);
+        tolua_pushboolean(tolua_S,(bool)ret);
+        return 1;
+    }
+    if (argc == 3)
+    {
+        std::string_view arg0;
+        std::string_view arg1;
+        long long arg2;
+
+        ok &= luaval_to_std_string_view(tolua_S, 2,&arg0, "ax.FileUtils:copyFile");
+
+        ok &= luaval_to_std_string_view(tolua_S, 3,&arg1, "ax.FileUtils:copyFile");
+
+        ok &= luaval_to_long_long(tolua_S, 4, &arg2, "ax.FileUtils:copyFile");
+        if(!ok)
+        {
+            tolua_error(tolua_S,"invalid arguments in function 'lua_ax_base_FileUtils_copyFile'", nullptr);
+            return 0;
+        }
+        auto&& ret = obj->copyFile(arg0, arg1, arg2);
+        tolua_pushboolean(tolua_S,(bool)ret);
+        return 1;
+    }
+    luaL_error(tolua_S, "%s has wrong number of arguments: %d, was expecting %d \n", "ax.FileUtils:copyFile",argc, 2);
+    return 0;
+
+#if _AX_DEBUG >= 1
+    tolua_lerror:
+    tolua_error(tolua_S,"#ferror in function 'lua_ax_base_FileUtils_copyFile'.",&tolua_err);
+#endif
+
+    return 0;
+}
 int lua_ax_base_FileUtils_getInstance(lua_State* tolua_S)
 {
     int argc = 0;
@@ -33523,6 +33998,7 @@ int lua_register_ax_base_FileUtils(lua_State* tolua_S)
         tolua_function(tolua_S,"listFilesRecursively",lua_ax_base_FileUtils_listFilesRecursively);
         tolua_function(tolua_S,"isFileExistInternal",lua_ax_base_FileUtils_isFileExistInternal);
         tolua_function(tolua_S,"isDirectoryExistInternal",lua_ax_base_FileUtils_isDirectoryExistInternal);
+        tolua_function(tolua_S,"copyFile",lua_ax_base_FileUtils_copyFile);
         tolua_function(tolua_S,"getInstance", lua_ax_base_FileUtils_getInstance);
         tolua_function(tolua_S,"destroyInstance", lua_ax_base_FileUtils_destroyInstance);
         tolua_function(tolua_S,"writeBinaryToFile", lua_ax_base_FileUtils_writeBinaryToFile);
@@ -51628,7 +52104,51 @@ int lua_ax_base_DrawNode_drawCircle(lua_State* tolua_S)
         }
     }while(0);
     ok  = true;
-    luaL_error(tolua_S, "%s has wrong number of arguments: %d, was expecting %d \n",  "ax.DrawNode:drawCircle",argc, 8);
+    do {
+        if (argc == 3) {
+            ax::Vec2 arg0;
+            ok &= luaval_to_vec2(tolua_S, 2, &arg0, "ax.DrawNode:drawCircle");
+
+            if (!ok) { break; }
+            double arg1;
+            ok &= luaval_to_number(tolua_S, 3, &arg1, "ax.DrawNode:drawCircle");
+
+            if (!ok) { break; }
+            ax::Color arg2;
+            ok &=luaval_to_color(tolua_S, 4, &arg2, "ax.DrawNode:drawCircle");
+
+            if (!ok) { break; }
+            obj->drawCircle(arg0, arg1, arg2);
+            lua_settop(tolua_S, 1);
+            return 1;
+        }
+    }while(0);
+    ok  = true;
+    do {
+        if (argc == 4) {
+            ax::Vec2 arg0;
+            ok &= luaval_to_vec2(tolua_S, 2, &arg0, "ax.DrawNode:drawCircle");
+
+            if (!ok) { break; }
+            double arg1;
+            ok &= luaval_to_number(tolua_S, 3, &arg1, "ax.DrawNode:drawCircle");
+
+            if (!ok) { break; }
+            ax::Color arg2;
+            ok &=luaval_to_color(tolua_S, 4, &arg2, "ax.DrawNode:drawCircle");
+
+            if (!ok) { break; }
+            double arg3;
+            ok &= luaval_to_number(tolua_S, 5, &arg3, "ax.DrawNode:drawCircle");
+
+            if (!ok) { break; }
+            obj->drawCircle(arg0, arg1, arg2, arg3);
+            lua_settop(tolua_S, 1);
+            return 1;
+        }
+    }while(0);
+    ok  = true;
+    luaL_error(tolua_S, "%s has wrong number of arguments: %d, was expecting %d \n",  "ax.DrawNode:drawCircle",argc, 3);
     return 0;
 
 #if _AX_DEBUG >= 1
@@ -52352,7 +52872,51 @@ int lua_ax_base_DrawNode_drawSolidCircle(lua_State* tolua_S)
         }
     }while(0);
     ok  = true;
-    luaL_error(tolua_S, "%s has wrong number of arguments: %d, was expecting %d \n",  "ax.DrawNode:drawSolidCircle",argc, 5);
+    do {
+        if (argc == 4) {
+            ax::Vec2 arg0;
+            ok &= luaval_to_vec2(tolua_S, 2, &arg0, "ax.DrawNode:drawSolidCircle");
+
+            if (!ok) { break; }
+            double arg1;
+            ok &= luaval_to_number(tolua_S, 3, &arg1, "ax.DrawNode:drawSolidCircle");
+
+            if (!ok) { break; }
+            ax::Color arg2;
+            ok &=luaval_to_color(tolua_S, 4, &arg2, "ax.DrawNode:drawSolidCircle");
+
+            if (!ok) { break; }
+            double arg3;
+            ok &= luaval_to_number(tolua_S, 5, &arg3, "ax.DrawNode:drawSolidCircle");
+
+            if (!ok) { break; }
+            obj->drawSolidCircle(arg0, arg1, arg2, arg3);
+            lua_settop(tolua_S, 1);
+            return 1;
+        }
+    }while(0);
+    ok  = true;
+    do {
+        if (argc == 3) {
+            ax::Vec2 arg0;
+            ok &= luaval_to_vec2(tolua_S, 2, &arg0, "ax.DrawNode:drawSolidCircle");
+
+            if (!ok) { break; }
+            double arg1;
+            ok &= luaval_to_number(tolua_S, 3, &arg1, "ax.DrawNode:drawSolidCircle");
+
+            if (!ok) { break; }
+            ax::Color arg2;
+            ok &=luaval_to_color(tolua_S, 4, &arg2, "ax.DrawNode:drawSolidCircle");
+
+            if (!ok) { break; }
+            obj->drawSolidCircle(arg0, arg1, arg2);
+            lua_settop(tolua_S, 1);
+            return 1;
+        }
+    }while(0);
+    ok  = true;
+    luaL_error(tolua_S, "%s has wrong number of arguments: %d, was expecting %d \n",  "ax.DrawNode:drawSolidCircle",argc, 3);
     return 0;
 
 #if _AX_DEBUG >= 1
@@ -97045,6 +97609,53 @@ int lua_ax_base_Material_getPrimitiveType(lua_State* tolua_S)
 
     return 0;
 }
+int lua_ax_base_Material_enableTransparentDoubleSided(lua_State* tolua_S)
+{
+    int argc = 0;
+    ax::Material* obj = nullptr;
+    bool ok  = true;
+
+#if _AX_DEBUG >= 1
+    tolua_Error tolua_err;
+#endif
+
+
+#if _AX_DEBUG >= 1
+    if (!tolua_isusertype(tolua_S,1,"ax.Material",0,&tolua_err)) goto tolua_lerror;
+#endif
+
+    obj = (ax::Material*)tolua_tousertype(tolua_S,1,0);
+
+#if _AX_DEBUG >= 1
+    if (!obj)
+    {
+        tolua_error(tolua_S,"invalid 'obj' in function 'lua_ax_base_Material_enableTransparentDoubleSided'", nullptr);
+        return 0;
+    }
+#endif
+
+    argc = lua_gettop(tolua_S)-1;
+    if (argc == 0)
+    {
+        if(!ok)
+        {
+            tolua_error(tolua_S,"invalid arguments in function 'lua_ax_base_Material_enableTransparentDoubleSided'", nullptr);
+            return 0;
+        }
+        obj->enableTransparentDoubleSided();
+        lua_settop(tolua_S, 1);
+        return 1;
+    }
+    luaL_error(tolua_S, "%s has wrong number of arguments: %d, was expecting %d \n", "ax.Material:enableTransparentDoubleSided",argc, 0);
+    return 0;
+
+#if _AX_DEBUG >= 1
+    tolua_lerror:
+    tolua_error(tolua_S,"#ferror in function 'lua_ax_base_Material_enableTransparentDoubleSided'.",&tolua_err);
+#endif
+
+    return 0;
+}
 int lua_ax_base_Material_setTransparent(lua_State* tolua_S)
 {
     int argc = 0;
@@ -97373,6 +97984,7 @@ int lua_register_ax_base_Material(lua_State* tolua_S)
         tolua_function(tolua_S,"getRenderState",lua_ax_base_Material_getRenderState);
         tolua_function(tolua_S,"setPrimitiveType",lua_ax_base_Material_setPrimitiveType);
         tolua_function(tolua_S,"getPrimitiveType",lua_ax_base_Material_getPrimitiveType);
+        tolua_function(tolua_S,"enableTransparentDoubleSided",lua_ax_base_Material_enableTransparentDoubleSided);
         tolua_function(tolua_S,"setTransparent",lua_ax_base_Material_setTransparent);
         tolua_function(tolua_S,"isTransparent",lua_ax_base_Material_isTransparent);
         tolua_function(tolua_S,"setForce2DQueue",lua_ax_base_Material_setForce2DQueue);
@@ -111029,44 +111641,54 @@ int lua_ax_base_FastTMXLayer_initWithTilesetInfo(lua_State* tolua_S)
 
     return 0;
 }
-int lua_ax_base_FastTMXLayer_create(lua_State* tolua_S)
+int lua_ax_base_FastTMXLayer_batchIndexForGID(lua_State* tolua_S)
 {
     int argc = 0;
+    ax::FastTMXLayer* obj = nullptr;
     bool ok  = true;
 
 #if _AX_DEBUG >= 1
     tolua_Error tolua_err;
 #endif
 
+
 #if _AX_DEBUG >= 1
-    if (!tolua_isusertable(tolua_S,1,"ax.FastTMXLayer",0,&tolua_err)) goto tolua_lerror;
+    if (!tolua_isusertype(tolua_S,1,"ax.FastTMXLayer",0,&tolua_err)) goto tolua_lerror;
 #endif
 
-    argc = lua_gettop(tolua_S) - 1;
+    obj = (ax::FastTMXLayer*)tolua_tousertype(tolua_S,1,0);
 
-    if (argc == 3)
+#if _AX_DEBUG >= 1
+    if (!obj)
     {
-        ax::TMXTilesetInfo* arg0;
-        ax::TMXLayerInfo* arg1;
-        ax::TMXMapInfo* arg2;
-        ok &= luaval_to_object<ax::TMXTilesetInfo>(tolua_S, 2, "ax.TMXTilesetInfo",&arg0, "ax.FastTMXLayer:create");
-        ok &= luaval_to_object<ax::TMXLayerInfo>(tolua_S, 3, "ax.TMXLayerInfo",&arg1, "ax.FastTMXLayer:create");
-        ok &= luaval_to_object<ax::TMXMapInfo>(tolua_S, 4, "ax.TMXMapInfo",&arg2, "ax.FastTMXLayer:create");
+        tolua_error(tolua_S,"invalid 'obj' in function 'lua_ax_base_FastTMXLayer_batchIndexForGID'", nullptr);
+        return 0;
+    }
+#endif
+
+    argc = lua_gettop(tolua_S)-1;
+    if (argc == 1)
+    {
+        unsigned int arg0;
+
+        ok &= luaval_to_int(tolua_S, 2, &arg0, "ax.FastTMXLayer:batchIndexForGID");
         if(!ok)
         {
-            tolua_error(tolua_S,"invalid arguments in function 'lua_ax_base_FastTMXLayer_create'", nullptr);
+            tolua_error(tolua_S,"invalid arguments in function 'lua_ax_base_FastTMXLayer_batchIndexForGID'", nullptr);
             return 0;
         }
-        auto&& ret = ax::FastTMXLayer::create(arg0, arg1, arg2);
-        object_to_luaval<ax::FastTMXLayer>(tolua_S, "ax.FastTMXLayer",(ax::FastTMXLayer*)ret);
+        auto&& ret = obj->batchIndexForGID(arg0);
+        tolua_pushnumber(tolua_S,(lua_Number)ret);
         return 1;
     }
-    luaL_error(tolua_S, "%s has wrong number of arguments: %d, was expecting %d\n ", "ax.FastTMXLayer:create",argc, 3);
+    luaL_error(tolua_S, "%s has wrong number of arguments: %d, was expecting %d \n", "ax.FastTMXLayer:batchIndexForGID",argc, 1);
     return 0;
+
 #if _AX_DEBUG >= 1
     tolua_lerror:
-    tolua_error(tolua_S,"#ferror in function 'lua_ax_base_FastTMXLayer_create'.",&tolua_err);
+    tolua_error(tolua_S,"#ferror in function 'lua_ax_base_FastTMXLayer_batchIndexForGID'.",&tolua_err);
 #endif
+
     return 0;
 }
 int lua_ax_base_FastTMXLayer_constructor(lua_State* tolua_S)
@@ -111142,7 +111764,7 @@ int lua_register_ax_base_FastTMXLayer(lua_State* tolua_S)
         tolua_function(tolua_S,"hasTileAnimation",lua_ax_base_FastTMXLayer_hasTileAnimation);
         tolua_function(tolua_S,"getTileAnimManager",lua_ax_base_FastTMXLayer_getTileAnimManager);
         tolua_function(tolua_S,"initWithTilesetInfo",lua_ax_base_FastTMXLayer_initWithTilesetInfo);
-        tolua_function(tolua_S,"create", lua_ax_base_FastTMXLayer_create);
+        tolua_function(tolua_S,"batchIndexForGID",lua_ax_base_FastTMXLayer_batchIndexForGID);
     tolua_endmodule(tolua_S);
     auto typeName = typeid(ax::FastTMXLayer).name(); // rtti is literal storage
     g_luaType[reinterpret_cast<uintptr_t>(typeName)] = "ax.FastTMXLayer";
